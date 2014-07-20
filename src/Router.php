@@ -19,7 +19,7 @@ class Router {
 	 * @param string $method
 	 * @return array
 	 */
-	public function resolve($requestUri, $method) {
+	public function lookup($requestUri, $method) {
 		$key = sprintf('%s %s', strtoupper($method), $requestUri);
 		foreach($this->routePatterns as $routePattern => $data) {
 			$matches = array();
