@@ -9,13 +9,20 @@ class Dispatcher {
 	/**
 	 * @var ServiceLocator
 	 */
-	private $sl = null;
+	private $serviceLocator = null;
 
 	/**
-	 * @param ServiceLocator $sl
+	 * @var InstanceCache
 	 */
-	public function __construct(ServiceLocator $sl) {
-		$this->sl = $sl;
+	private $instanceCache;
+
+	/**
+	 * @param ServiceLocator $serviceLocator
+	 * @param InstanceCache $instanceCache
+	 */
+	public function __construct(ServiceLocator $serviceLocator, InstanceCache $instanceCache = null) {
+		$this->serviceLocator = $serviceLocator;
+		$this->instanceCache = $instanceCache;
 	}
 
 	/**
@@ -40,7 +47,7 @@ class Dispatcher {
 			$params = array();
 			foreach($constructor->getParameters() as $parameter) {
 				$paramName = $parameter->getName();
-				$param = $this->sl->resolve($paramName);
+				$param = $this->serviceLocator->resolve($paramName);
 				$params[] = $param;
 			}
 			$instance = $ref->newInstanceArgs($params);

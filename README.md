@@ -7,11 +7,13 @@ Workflow:
 
 1.) Define some routes. Routes are some arrays identified by a unique key. The data-part is completely up to you. If you want something special in you data-part, go on and define it there.
 
-2.) Call the [Router](./src/Router.php) and pass the routes-array to it. The router does nothing more than lookup a data-array who's key is matching the incoming REQUEST_URI (for example). So the return-value of $router->resolve() is the value-part of the matching key.
+2.) Call [Router](./src/Router.php) and pass the routes-array to it. The router does nothing more than lookup a data-array who's key is matching the incoming REQUEST_URI (for example). So the return-value of $router->resolve() is the value-part of the matching key.
 
 3.) Do something with the data-array. For example, you can merge the $_GET- or $_POST-params into some data-key, do some post-processing, whatever.
 
-4.) Optionally utilize the [Dispatcher](./src/Dispatcher.php) to call some arbitary class. The dispatcher does not require the class to implement a specific class nor does it require special parameters for the constructor or the targeted method.
+4.) Optionally utilize [Dispatcher](./src/Dispatcher.php) to call some arbitary class. The dispatcher does not require the class to implement a specific class nor does it require special parameters for the constructor or the targeted method. Here is some magic that gets applied. The constructor of [Dispatcher](./src/Dispatcher.php) requires a class that implements the [ServiceLocater](./src/ServiceLocater.php)-Interface. The constructor-variables of the targeted class are then instanciated by the [ServiceLocater](./src/ServiceLocater.php) and passed over.
+
+This does not happen for the method-call, but here is some magic applied, too. The name of the variables in the method must match to the array-keys of $params, passed to [Dispatcher::invoke](./src/Dispatcher.php#L27).
 
 This is what the bootstrap could look like:
 ```PHP
