@@ -36,8 +36,14 @@ $data = $router->lookup($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
 // Use $_GET and override it with the contents of $data['params']
 $data['params'] = array_merge($_GET, $data['params']);
 
+// Define a service-locator for [Dispatcher](./src/Dispatcher.php)
+$sl = new SimpleServiceLocator();
+
+// Define a instance-cache for [Dispatcher](./src/Dispatcher.php)
+$ic = new NoCache();
+
 // Call a controller specified in the matching route
-$dispatcher = new Dispatcher($sl);
+$dispatcher = new Dispatcher($sl, $ic);
 $data = $dispatcher->invoke($data['class'], $data['method'], $data['params']);
 
 // The output of the controller's method

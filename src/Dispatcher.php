@@ -20,7 +20,7 @@ class Dispatcher {
 	 * @param ServiceLocator $serviceLocator
 	 * @param InstanceCache $instanceCache
 	 */
-	public function __construct(ServiceLocator $serviceLocator, InstanceCache $instanceCache = null) {
+	public function __construct(ServiceLocator $serviceLocator, InstanceCache $instanceCache) {
 		$this->serviceLocator = $serviceLocator;
 		$this->instanceCache = $instanceCache;
 	}
@@ -32,6 +32,8 @@ class Dispatcher {
 	 * @return mixed
 	 */
 	public function invoke($className, $method, array $params) {
+		if($this->instanceCache->has($className)) {
+		}
 		$inst = $this->getInstance($className);
 		return $this->invokeMethod($method, $inst, $params);
 	}
