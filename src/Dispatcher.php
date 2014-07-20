@@ -73,7 +73,11 @@ class Dispatcher {
 		$refMethod = $refObject->getMethod($method);
 		$parameters = array();
 		foreach($refMethod->getParameters() as $parameter) {
-			$value = $params[$parameter->getName()];
+			if(array_key_exists($parameter->getName(), $params)) {
+				$value = $params[$parameter->getName()];
+			} else {
+				$value = null;
+			}
 			$parameters[] = $value;
 		}
 		return $refMethod->invokeArgs($inst, $parameters);
