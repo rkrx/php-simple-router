@@ -1,5 +1,7 @@
 <?php
-namespace Kir\Http\Routing;
+namespace Kir\Http\Routing\InstanceCaches;
+
+use Kir\Http\Routing\InstanceCache;
 
 class NoCache implements InstanceCache {
 	/**
