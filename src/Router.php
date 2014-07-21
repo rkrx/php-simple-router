@@ -3,7 +3,12 @@ namespace Kir\Http\Routing;
 
 class Router {
 	/**
-	 * @var string[]
+	 * @var array[]
+	 */
+	private $routes;
+
+	/**
+	 * @var array[]
 	 */
 	private $routePatterns;
 
@@ -11,7 +16,15 @@ class Router {
 	 * @param array $routes
 	 */
 	public function __construct(array $routes) {
+		$this->routes = $routes;
 		$this->routePatterns = $this->compile($routes);
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getRoutes() {
+		return $this->routes;
 	}
 
 	/**
