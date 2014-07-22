@@ -6,7 +6,7 @@ namespace Kir\Http\Routing\Tools;
  */
 function getHttpBodyAsJsonArray() {
 	$content = file_get_contents('php://input');
-	if($content[0] == '{') {
+	if(strlen($content) > 0 && $content[0] == '{') {
 		$content = json_decode($content, true);
 		if(is_array($content)) {
 			return $content;
