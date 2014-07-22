@@ -19,9 +19,9 @@
 		"psr-4": {
 			"Kir\\Http\\Routing\\": "src/"
 		},
-		"files": {
+		"files": [
 			"src/Tools/functions.php"
-		}
+		]
 	},
 	"autoload-dev": {
 		"psr-4": {
