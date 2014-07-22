@@ -37,6 +37,7 @@ class Router {
 		foreach($this->routePatterns as $routePattern => $data) {
 			$matches = array();
 			if(preg_match($routePattern, $key, $matches)) {
+				$matches = $this->filterNumericKeys($matches);
 				$data['params'] = $matches;
 				return $data;
 			}
@@ -52,6 +53,9 @@ class Router {
 		$result = array();
 		foreach($routes as $route => $data) {
 			$route = preg_quote($route, '/');
+			$route = preg_replace_callback('/\\\\\\[(.*?)\\\\\\]/', function ($input) {
+				return "(?:{$input[1]})?";
+			}, $route);
 			$route = preg_replace_callback('/\\\\:\\w+/', function ($input) {
 				$key = $input[0];
 				$key = ltrim($key, '\\:');
@@ -71,6 +75,20 @@ class Router {
 		uksort($result, function ($a, $b) {
 			return strlen($a) > strlen($b) ? 1 : (strlen($a) < strlen($b) ? -1 : 0);
 		});
+		return $result;
+	}
+
+	/**
+	 * @param array $matches
+	 * @return array
+	 */
+	private function filterNumericKeys($matches) {
+		$result = array();
+		foreach($matches as $key => $value) {
+			if(!is_numeric($key)) {
+				$result[$key] = $value;
+			}
+		}
 		return $result;
 	}
 }
