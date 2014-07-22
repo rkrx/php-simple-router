@@ -1,5 +1,5 @@
 {
-	"name": "rkrx/php-simple-router",
+	"name": "rkr/php-simple-router",
 	"description": "A simple wildcard matcher",
 	"homepage": "http://github.com/rkrx/wildcards",
 	"license": "MIT",
