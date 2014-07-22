@@ -2,6 +2,20 @@
 namespace Kir\Http\Routing\Tools;
 
 /**
+ * @return array
+ */
+function getHttpBodyAsJsonArray() {
+	$content = file_get_contents('php://input');
+	if($content[0] == '{') {
+		$content = json_decode($content, true);
+		if(is_array($content)) {
+			return $content;
+		}
+	}
+	return array();
+}
+
+/**
  * @param mixed|array $a
  * @param mixed|array $b
  * @param array|null $mask
