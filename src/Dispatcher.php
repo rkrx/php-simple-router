@@ -42,7 +42,7 @@ class Dispatcher {
 	 * @param string $className
 	 * @return object
 	 */
-	private function getInstance($className) {
+	public function getInstance($className) {
 		$ref = new ReflectionClass($className);
 		if($ref->hasMethod('__construct')) {
 			$constructor = $ref->getMethod('__construct');
