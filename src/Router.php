@@ -41,7 +41,7 @@ class Router {
 				return $data;
 			}
 		}
-		return array();
+		return array('params' => array());
 	}
 
 	/**
