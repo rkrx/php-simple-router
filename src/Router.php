@@ -33,6 +33,7 @@ class Router {
 	 * @return array
 	 */
 	public function lookup($requestUri, $method) {
+		$requestUri = $this->extractPath($requestUri);
 		$key = sprintf('%s %s', strtoupper($method), $requestUri);
 		foreach($this->routePatterns as $routePattern => $data) {
 			$matches = array();
@@ -90,5 +91,17 @@ class Router {
 			}
 		}
 		return $result;
+	}
+
+	/**
+	 * @param string $requestUri
+	 * @return string
+	 */
+	private function extractPath($requestUri) {
+		$pos = strpos($requestUri, '?');
+		if($pos !== false) {
+			$requestUri = substr($requestUri, 0, $pos);
+		}
+		return $requestUri;
 	}
 }
