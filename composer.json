@@ -6,7 +6,7 @@
 	"type": "library",
 	"minimum-stability": "stable",
 	"authors": [{
-		"name": "Ronald Kirschler",
+		"name": "Ron Kirschler",
 		"email": "ron.kirschler@gmail.com"
 	}],
 	"require": {
