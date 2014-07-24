@@ -2,73 +2,57 @@
 namespace Kir\Http\Routing;
 
 use Exception;
-use ReflectionClass;
 use ReflectionObject;
 
 class Dispatcher {
 	/**
-	 * @var ServiceLocator
+	 * @var callable
 	 */
-	private $serviceLocator = null;
+	private $classFactory;
 
 	/**
-	 * @var InstanceCache
+	 * @return callable
 	 */
-	private $instanceCache;
+	public function getClassFactory() {
+		return $this->classFactory;
+	}
 
 	/**
-	 * @param ServiceLocator $serviceLocator
-	 * @param InstanceCache $instanceCache
+	 * @param callable $callable
+	 * @return $this
 	 */
-	public function __construct(ServiceLocator $serviceLocator, InstanceCache $instanceCache) {
-		$this->serviceLocator = $serviceLocator;
-		$this->instanceCache = $instanceCache;
+	public function setClassFactory($callable) {
+		$this->classFactory = $callable;
+		return $this;
 	}
 
 	/**
 	 * @param string $className
 	 * @param string $method
 	 * @param array $params
+	 * @throws Exceptions\BadInstanceFoundException
+	 * @throws Exceptions\MethodNotFoundException
 	 * @return mixed
 	 */
 	public function invoke($className, $method, array $params) {
-		if($this->instanceCache->has($className)) {
+		$instance = call_user_func($this->classFactory, $className, $params);
+		if(!is_object($instance)) {
+			throw new Exceptions\BadInstanceFoundException();
 		}
-		$inst = $this->getInstance($className);
-		return $this->invokeMethod($method, $inst, $params);
-	}
-
-	/**
-	 * @param string $className
-	 * @return object
-	 */
-	public function getInstance($className) {
-		$ref = new ReflectionClass($className);
-		if($ref->hasMethod('__construct')) {
-			$constructor = $ref->getMethod('__construct');
-			$params = array();
-			foreach($constructor->getParameters() as $parameter) {
-				$paramName = $parameter->getName();
-				$param = $this->serviceLocator->resolve($paramName);
-				$params[] = $param;
-			}
-			$instance = $ref->newInstanceArgs($params);
-			return $instance;
-		}
-		return $ref->newInstance();
+		return $this->invokeMethod($method, $instance, $params);
 	}
 
 	/**
 	 * @param string $method
-	 * @param object $inst
+	 * @param object $instance
 	 * @param array $params
 	 * @throws Exception
 	 * @return mixed
 	 */
-	private function invokeMethod($method, $inst, $params) {
-		$refObject = new ReflectionObject($inst);
+	private function invokeMethod($method, $instance, $params) {
+		$refObject = new ReflectionObject($instance);
 		if(!$refObject->hasMethod($method)) {
-			throw new Exception("Missing method {$method}");
+			throw new Exceptions\MethodNotFoundException("Missing method {$method}");
 		}
 		$refMethod = $refObject->getMethod($method);
 		$parameters = array();
@@ -80,6 +64,6 @@ class Dispatcher {
 			}
 			$parameters[] = $value;
 		}
-		return $refMethod->invokeArgs($inst, $parameters);
+		return $refMethod->invokeArgs($instance, $parameters);
 	}
 }
