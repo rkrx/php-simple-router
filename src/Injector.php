@@ -2,6 +2,7 @@
 namespace Kir\Http\Routing;
 
 use ReflectionClass;
+use arr;
 
 class Injector {
 	/**
@@ -10,10 +11,25 @@ class Injector {
 	private $sl;
 
 	/**
+	 * @var array
+	 */
+	private $values;
+
+	/**
 	 * @param ServiceLocator $sl
 	 */
 	public function __construct(ServiceLocator $sl) {
 		$this->sl = $sl;
+	}
+
+	/**
+	 * @param string $name
+	 * @param mixed $value
+	 * @return $this
+	 */
+	public function register($name, $value) {
+		$this->values[$name] = $value;
+		return $this;
 	}
 
 	/**
@@ -27,7 +43,11 @@ class Injector {
 			$params = array();
 			foreach($constructor->getParameters() as $parameter) {
 				$paramName = $parameter->getName();
-				$param = $this->sl->resolve($paramName);
+				if(arr\has($this->values, $paramName)) {
+					$param = $this->values[$paramName];
+				} else {
+					$param = $this->sl->resolve($paramName, $this);
+				}
 				$params[] = $param;
 			}
 			$instance = $ref->newInstanceArgs($params);
