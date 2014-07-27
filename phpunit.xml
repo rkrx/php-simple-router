@@ -14,8 +14,6 @@
 	<testsuites>
 		<testsuite name="RoutesTest">
 			<file>tests/RouterTest.php</file>
-			<file>tests/DispatcherTest.php</file>
-			<file>tests/InjectorTest.php</file>
 		</testsuite>
 	</testsuites>
 </phpunit>
