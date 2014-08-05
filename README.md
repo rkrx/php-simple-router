@@ -16,6 +16,7 @@ Workflow:
 This does not happen for the method-call, but here is some magic applied, too. The name of the variables in the method must match to the array-keys of $params, passed to [Dispatcher::invoke](./src/Dispatcher.php#L27).
 
 This is what the bootstrap could look like:
+
 ```PHP
 // Setup some test-request-parameters
 $_SERVER['REQUEST_URI'] = '/some/path/10';
@@ -51,6 +52,7 @@ echo $data;
 ```
 
 This is what the controller could look like:
+
 ```PHP
 namespace Test;
 class Main {

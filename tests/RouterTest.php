@@ -11,7 +11,7 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		);
 		$router = new Router($routes);
 		$data = $router->lookup('/test/10', 'GET');
-		$this->assertEquals($data['value'], 123);
+		$this->assertEquals($data['data']['value'], 123);
 		$this->assertEquals($data['params']['id'], 10);
 	}
 
@@ -22,7 +22,7 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		);
 		$router = new Router($routes);
 		$data = $router->lookup('/test/10', 'POST');
-		$this->assertEquals($data['value'], 123);
+		$this->assertEquals($data['data']['value'], 123);
 		$this->assertEquals($data['params']['id'], 10);
 	}
 

@@ -17,7 +17,7 @@ class Router {
 	 */
 	public function __construct(array $routes) {
 		$this->routes = $routes;
-		$this->routePatterns = $this->compile($routes);
+		$this->routePatterns = $this->compileRoutes($routes);
 	}
 
 	/**
@@ -39,33 +39,41 @@ class Router {
 			$matches = array();
 			if(preg_match($routePattern, $key, $matches)) {
 				$matches = $this->filterNumericKeys($matches);
-				$data['params'] = $matches;
-				return $data;
+				return array('data' => $data, 'params' => $matches);
 			}
 		}
-		return array('params' => array());
+		return array('data' => null, 'params' => array());
 	}
 
 	/**
 	 * @param array $routes
 	 * @return array
 	 */
-	private function compile(array $routes) {
-		$result = array();
+	private function compileRoutes(array $routes) {
+		$compiledRoutes = array();
+		$routes = $this->sortRoutes($routes);
 		foreach($routes as $route => $data) {
-			$route = preg_quote($route, '/');
-			$route = preg_replace_callback('/\\\\\\[(.*?)\\\\\\]/', function ($input) {
-				return "(?:{$input[1]})?";
-			}, $route);
-			$route = preg_replace_callback('/\\\\:\\w+/', function ($input) {
-				$key = $input[0];
-				$key = ltrim($key, '\\:');
-				return "(?P<{$key}>\\w+)";
-			}, $route);
-			$result["/^{$route}$/"] = $data;
+			$route = $this->compileRoute($route);
+			$compiledRoutes[$route] = $data;
 		}
-		$result = $this->sortRoutes($result);
-		return $result;
+		return $compiledRoutes;
+	}
+
+	/**
+	 * @param string $route
+	 * @return string
+	 */
+	private function compileRoute($route) {
+		$route = preg_quote($route, '/');
+		$route = preg_replace_callback('/\\\\\\[(.*?)\\\\\\]/', function ($input) {
+			return "(?:{$input[1]})?";
+		}, $route);
+		$route = preg_replace_callback('/\\\\:\\w+/', function ($input) {
+			$key = $input[0];
+			$key = ltrim($key, '\\:');
+			return "(?P<{$key}>\\w+)";
+		}, $route);
+		return "/^{$route}$/";
 	}
 
 	/**
@@ -74,7 +82,7 @@ class Router {
 	 */
 	private function sortRoutes(array $result) {
 		uksort($result, function ($a, $b) {
-			return strlen($a) > strlen($b) ? 1 : (strlen($a) < strlen($b) ? -1 : 0);
+			return strlen($a) < strlen($b) ? 1 : (strlen($a) > strlen($b) ? -1 : 0);
 		});
 		return $result;
 	}
@@ -98,10 +106,7 @@ class Router {
 	 * @return string
 	 */
 	private function extractPath($requestUri) {
-		$pos = strpos($requestUri, '?');
-		if($pos !== false) {
-			$requestUri = substr($requestUri, 0, $pos);
-		}
-		return $requestUri;
+		list($path) = explode('?', $requestUri, 2);
+		return $path;
 	}
 }
