@@ -59,5 +59,17 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$this->assertArrayHasKey('id', $params);
 		$this->assertEquals($params['id'], 10);
 		$this->assertArrayNotHasKey('start', $params);
+
+		$routes = array(
+			'GET /test[/:id/:start]' => array('value' => 123),
+		);
+		$router = new Router($routes);
+		$data = $router->lookup('/test/10/20', 'GET');
+		$this->assertArrayHasKey('params', $data);
+		$params = $data['params'];
+		$this->assertArrayHasKey('id', $params);
+		$this->assertArrayHasKey('start', $params);
+		$this->assertEquals($params['id'], 10);
+		$this->assertEquals($params['start'], 20);
 	}
 }

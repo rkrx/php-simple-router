@@ -1,23 +1,22 @@
 <?php
 namespace Kir\Http\Routing;
 
-class Router {
+use ArrayAccess;
+
+class Router implements ArrayAccess {
 	/**
 	 * @var array[]
 	 */
 	private $routes;
 
 	/**
-	 * @var array[]
-	 */
-	private $routePatterns;
-
-	/**
 	 * @param array $routes
 	 */
 	public function __construct(array $routes) {
 		$this->routes = $routes;
-		$this->routePatterns = $this->compileRoutes($routes);
+		foreach($routes as $route => $data) {
+			$this->offsetSet($route, $data);
+		}
 	}
 
 	/**
@@ -28,35 +27,62 @@ class Router {
 	}
 
 	/**
-	 * @param string $requestUri
+	 * @param string $request
 	 * @param string $method
 	 * @return array
 	 */
-	public function lookup($requestUri, $method) {
-		$requestUri = $this->extractPath($requestUri);
-		$key = sprintf('%s %s', strtoupper($method), $requestUri);
-		foreach($this->routePatterns as $routePattern => $data) {
+	public function lookup($request, $method) {
+		$key = sprintf('%s %s', strtoupper($method), $request);
+		foreach($this->routes as $routeData) {
 			$matches = array();
-			if(preg_match($routePattern, $key, $matches)) {
-				$matches = $this->filterNumericKeys($matches);
-				return array('data' => $data, 'params' => $matches);
+			if(preg_match($routeData['pattern'], $key, $matches)) {
+				$matches = array_intersect_key($matches, array_flip(array_filter(array_keys($matches), 'ctype_alpha')));
+				return array('data' => $routeData['data'], 'params' => $matches);
 			}
 		}
 		return array('data' => null, 'params' => array());
 	}
 
 	/**
-	 * @param array $routes
-	 * @return array
+	 * @param string $offset
+	 * @return boolean
 	 */
-	private function compileRoutes(array $routes) {
-		$compiledRoutes = array();
-		$routes = $this->sortRoutes($routes);
-		foreach($routes as $route => $data) {
-			$route = $this->compileRoute($route);
-			$compiledRoutes[$route] = $data;
+	public function offsetExists($offset) {
+		return array_key_exists($offset, $this->routes);
+	}
+
+	/**
+	 * @param string $offset
+	 * @return mixed Can return all value types.
+	 */
+	public function offsetGet($offset) {
+		if($this->offsetExists($offset)) {
+			return $this->routes[$offset]['data'];
 		}
-		return $compiledRoutes;
+		return null;
+	}
+
+	/**
+	 * @param string $offset
+	 * @param mixed $value
+	 * @return $this
+	 */
+	public function offsetSet($offset, $value) {
+		$this->routes[$offset] = array(
+			'pattern' => $this->compileRoute($offset),
+			'data' => $value
+		);
+		$this->routes = $this->sortRoutes($this->routes);
+		return $this;
+	}
+
+	/**
+	 * @param string $offset
+	 * @return $this
+	 */
+	public function offsetUnset($offset) {
+		unset($this->routes[$offset]);
+		return $this;
 	}
 
 	/**
@@ -65,42 +91,19 @@ class Router {
 	 */
 	private function compileRoute($route) {
         	$route = preg_quote($route, '/');
-        	$route = str_replace(array('\[', '\]'), array('(?:', ')?'), $route);
+        	$route = str_replace(array('\\[', '\\]'), array('(?:', ')?'), $route);
         	$route = preg_replace('/(?:\\\:(\w+))/', '(?P<$1>\\w+)', $route);
         	return "/^{$route}$/";
 	}
 
 	/**
-	 * @param array $result
+	 * @param array $routes
 	 * @return array
 	 */
-	private function sortRoutes(array $result) {
-		uksort($result, function ($a, $b) {
+	private function sortRoutes(array $routes) {
+		uksort($routes, function ($a, $b) {
 			return strlen($a) < strlen($b) ? 1 : (strlen($a) > strlen($b) ? -1 : 0);
 		});
-		return $result;
-	}
-
-	/**
-	 * @param array $matches
-	 * @return array
-	 */
-	private function filterNumericKeys($matches) {
-		$result = array();
-		foreach($matches as $key => $value) {
-			if(!is_numeric($key)) {
-				$result[$key] = $value;
-			}
-		}
-		return $result;
-	}
-
-	/**
-	 * @param string $requestUri
-	 * @return string
-	 */
-	private function extractPath($requestUri) {
-		list($path) = explode('?', $requestUri, 2);
-		return $path;
+		return $routes;
 	}
 }
