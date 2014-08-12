@@ -64,16 +64,10 @@ class Router {
 	 * @return string
 	 */
 	private function compileRoute($route) {
-		$route = preg_quote($route, '/');
-		$route = preg_replace_callback('/\\\\\\[(.*?)\\\\\\]/', function ($input) {
-			return "(?:{$input[1]})?";
-		}, $route);
-		$route = preg_replace_callback('/\\\\:\\w+/', function ($input) {
-			$key = $input[0];
-			$key = ltrim($key, '\\:');
-			return "(?P<{$key}>\\w+)";
-		}, $route);
-		return "/^{$route}$/";
+        	$route = preg_quote($route, '/');
+        	$route = str_replace(array('\[', '\]'), array('(?:', ')?'), $route);
+        	$route = preg_replace('/(?:\\\:(\w+))/', '(?P<$1>\\w+)', $route);
+        	return "/^{$route}$/";
 	}
 
 	/**
