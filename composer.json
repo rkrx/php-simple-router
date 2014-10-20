@@ -15,9 +15,6 @@
 	"require-dev": {
 		"phpunit/phpunit": "3.7.*"
 	},
-	"suggest": {
-		"rkr/dispatcher": ""
-	},
 	"autoload": {
 		"psr-4": {
 			"Kir\\Http\\Routing\\": "src/"
