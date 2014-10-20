@@ -108,10 +108,10 @@ class Router implements ArrayAccess {
 	 * @return string
 	 */
 	private function compileRoute($route) {
-        	$route = preg_quote($route, '/');
-        	$route = str_replace(array('\\[', '\\]'), array('(?:', ')?'), $route);
-        	$route = preg_replace('/(?:\\\:(\w+))/', '(?P<$1>\\w+)', $route);
-        	return "/^{$route}$/";
+		$route = preg_quote($route, '/');
+		$route = str_replace(array('\\[', '\\]'), array('(?:', ')?'), $route);
+		$route = preg_replace('/(?:\\\:(\w+))/', '(?P<$1>\\w+)', $route);
+		return "/^{$route}$/";
 	}
 
 	/**
