@@ -12,7 +12,7 @@ class Router implements ArrayAccess {
 	/**
 	 * @param array $routes
 	 */
-	public function __construct(array $routes) {
+	public function __construct(array $routes = array()) {
 		$this->routes = $routes;
 		foreach($routes as $route => $data) {
 			$this->offsetSet($route, $data);
