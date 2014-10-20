@@ -98,7 +98,7 @@ class Router implements ArrayAccess {
 	public function addNewRouteListener($fn) {
 		$this->listeners[] = $fn;
 		foreach($this->routes as $pattern => $data) {
-			call_user_func($fn, $pattern, $data);
+			call_user_func($fn, $data['data'], [], $pattern);
 		}
 		return $this;
 	}
@@ -132,7 +132,7 @@ class Router implements ArrayAccess {
 	 */
 	private function fireEvent($pattern, $data) {
 		foreach($this->listeners as $listener) {
-			call_user_func($listener, $pattern, $data);
+			call_user_func($listener, $data['data'], [], $pattern);
 		}
 		return $this;
 	}
