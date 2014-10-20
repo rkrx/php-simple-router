@@ -28,12 +28,12 @@ class ReverseLookupService {
 	public function __construct(Router $router) {
 		$this->router = $router;
 		$this->fn = function ($data, $pattern) {
-			if(!array_key_exists('alias', $data)) {
+			if(!array_key_exists('alias', $data['data'])) {
 				throw new \Exception("Alias not found for route '{$pattern}'");
 			}
-			return $data['alias'];
+			return $data['data']['alias'];
 		};
-		$this->router->addNewRouteListener(function ($data, $params, $pattern) {
+		$this->router->addNewRouteListener(function ($data, $pattern) {
 			$this->cache[$pattern] = $data;
 			$alias = call_user_func($this->fn, $data, $pattern);
 			$this->lookup[$alias] = $pattern;

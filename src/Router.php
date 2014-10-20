@@ -78,7 +78,7 @@ class Router implements ArrayAccess {
 			'data' => $value
 		);
 		$this->routes = $this->sortRoutes($this->routes);
-		$this->fireEvent($offset, $value);
+		$this->fireEvent($offset, $this->routes[$offset]);
 		return $this;
 	}
 
@@ -98,7 +98,7 @@ class Router implements ArrayAccess {
 	public function addNewRouteListener($fn) {
 		$this->listeners[] = $fn;
 		foreach($this->routes as $pattern => $data) {
-			call_user_func($fn, $data['data'], [], $pattern);
+			call_user_func($fn, $data, $pattern);
 		}
 		return $this;
 	}
@@ -132,7 +132,7 @@ class Router implements ArrayAccess {
 	 */
 	private function fireEvent($pattern, $data) {
 		foreach($this->listeners as $listener) {
-			call_user_func($listener, $data['data'], [], $pattern);
+			call_user_func($listener, $data, $pattern);
 		}
 		return $this;
 	}
