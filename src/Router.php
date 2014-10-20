@@ -10,6 +10,11 @@ class Router implements ArrayAccess {
 	private $routes;
 
 	/**
+	 * @var callable[]
+	 */
+	private $listeners = array();
+
+	/**
 	 * @param array $routes
 	 */
 	public function __construct(array $routes = array()) {
@@ -73,6 +78,7 @@ class Router implements ArrayAccess {
 			'data' => $value
 		);
 		$this->routes = $this->sortRoutes($this->routes);
+		$this->fireEvent($offset, $value);
 		return $this;
 	}
 
@@ -82,6 +88,18 @@ class Router implements ArrayAccess {
 	 */
 	public function offsetUnset($offset) {
 		unset($this->routes[$offset]);
+		return $this;
+	}
+
+	/**
+	 * @param callable $fn
+	 * @return $this
+	 */
+	public function addNewRouteListener($fn) {
+		$this->listeners[] = $fn;
+		foreach($this->routes as $pattern => $data) {
+			call_user_func($fn, $pattern, $data);
+		}
 		return $this;
 	}
 
@@ -105,5 +123,17 @@ class Router implements ArrayAccess {
 			return strlen($a) < strlen($b) ? 1 : (strlen($a) > strlen($b) ? -1 : 0);
 		});
 		return $routes;
+	}
+
+	/**
+	 * @param string $pattern
+	 * @param mixed $data
+	 * @return $this
+	 */
+	private function fireEvent($pattern, $data) {
+		foreach($this->listeners as $listener) {
+			call_user_func($listener, $pattern, $data);
+		}
+		return $this;
 	}
 }
