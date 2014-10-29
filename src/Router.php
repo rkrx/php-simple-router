@@ -41,16 +41,19 @@ class Router implements ArrayAccess {
 		$key = sprintf('%s %s', strtoupper($method), $request);
 		foreach($this->routes as $routeData) {
 			$matches = array();
+			$params = array();
 			if(preg_match($routeData['pattern'], $key, $matches)) {
 				if(!empty($routeData['queryParams'])) {
 					foreach($routeData['queryParams'] as $key => $value) {
 						if(!array_key_exists($key, $getParams) || $getParams[$key] !== $value) {
 							continue(2);
 						}
+						$params[$key] = $getParams[$key];
 					}
 				}
 				$matches = array_intersect_key($matches, array_flip(array_filter(array_keys($matches), 'ctype_alpha')));
-				return array('data' => $routeData['data'], 'params' => $matches);
+				$params = array_merge($params, $matches);
+				return array('data' => $routeData['data'], 'params' => $params);
 			}
 		}
 		return array('data' => null, 'params' => array());

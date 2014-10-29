@@ -83,5 +83,7 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 
 		$data = $router->lookup('/', 'GET', array('ctrl' => 'Index', 'action' => 'index'));
 		$this->assertEquals(123, $data['data']['value']);
+		$this->assertEquals('Index', $data['params']['ctrl']);
+		$this->assertEquals('index', $data['params']['action']);
 	}
 }
