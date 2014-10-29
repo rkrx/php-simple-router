@@ -25,13 +25,15 @@ $_GET['start'] = 20;
 
 /*
  * <?php return [
- *     'GET /some/path' => ['class' => 'Test\\Main', 'method' => 'test'],
- *     'GET /some/path/:start' => ['class' => 'Test\\Main', 'method' => 'test'],
+ *     'GET /' => ['class' => Main::class, 'method' => 'start'],
+ *     'GET /some/path' => ['class' => Main::class, 'method' => 'test'],
+ *     'GET /some/path/:start' => ['class' => 'Test::class', 'method' => 'test'],
+ *     'GET /list?type=gallery' => ['class' => 'Test::class', 'method' => 'showGallery'],
  * ];
  */
 $_SERVER = array_merge(['REQUEST_URI' => '/', 'REQUEST_METHOD' => 'GET'], $_SERVER) 
 $router = new Router(require '../config/routes.php');
-$data = $router->lookup($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
+$data = $router->lookup($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD'], $_REQUEST);
 
-print_r($data);
+print_r($data); // ['class' => Main::class, 'method' => 'start']
 ```

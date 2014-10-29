@@ -72,4 +72,16 @@ class RouterTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($params['id'], 10);
 		$this->assertEquals($params['start'], 20);
 	}
+
+	public function testQueryParameters() {
+		$router = new Router(array('GET /?ctrl=Index&action=index' => array('value' => 123)));
+		$data = $router->lookup('/', 'GET');
+		$this->assertEquals(null, $data['data']);
+
+		$data = $router->lookup('/', 'GET', array('ctrl' => 'Index'));
+		$this->assertEquals(null, $data['data']);
+
+		$data = $router->lookup('/', 'GET', array('ctrl' => 'Index', 'action' => 'index'));
+		$this->assertEquals(123, $data['data']['value']);
+	}
 }

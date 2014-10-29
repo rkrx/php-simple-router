@@ -34,13 +34,21 @@ class Router implements ArrayAccess {
 	/**
 	 * @param string $request
 	 * @param string $method
+	 * @param array $getParams
 	 * @return array
 	 */
-	public function lookup($request, $method) {
+	public function lookup($request, $method, $getParams = array()) {
 		$key = sprintf('%s %s', strtoupper($method), $request);
 		foreach($this->routes as $routeData) {
 			$matches = array();
 			if(preg_match($routeData['pattern'], $key, $matches)) {
+				if(!empty($routeData['queryParams'])) {
+					foreach($routeData['queryParams'] as $key => $value) {
+						if(!array_key_exists($key, $getParams) || $getParams[$key] !== $value) {
+							continue(2);
+						}
+					}
+				}
 				$matches = array_intersect_key($matches, array_flip(array_filter(array_keys($matches), 'ctype_alpha')));
 				return array('data' => $routeData['data'], 'params' => $matches);
 			}
@@ -73,9 +81,11 @@ class Router implements ArrayAccess {
 	 * @return $this
 	 */
 	public function offsetSet($offset, $value) {
+		list($path, $queryParams) = $this->splitOffset($offset);
 		$this->routes[$offset] = array(
-			'pattern' => $this->compileRoute($offset),
-			'data' => $value
+			'pattern' => $this->compileRoute($path),
+			'data' => $value,
+			'queryParams' => $queryParams
 		);
 		$this->routes = $this->sortRoutes($this->routes);
 		$this->fireEvent($offset, $this->routes[$offset]);
@@ -135,5 +145,16 @@ class Router implements ArrayAccess {
 			call_user_func($listener, $data, $pattern);
 		}
 		return $this;
+	}
+
+	/**
+	 * @param string $offset
+	 * @return array
+	 */
+	private function splitOffset($offset) {
+		list($path, $queryParams) = explode('?', "{$offset}?", 2);
+		$queryParams = rtrim($queryParams, '?');
+		parse_str($queryParams, $queryParams);
+		return array($path, $queryParams);
 	}
 }
