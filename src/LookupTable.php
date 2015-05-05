@@ -3,25 +3,27 @@ namespace Kir\Http\Routing;
 
 use ArrayAccess;
 
-class Router implements ArrayAccess {
-	/**
-	 * @var array[]
-	 */
+class LookupTable implements ArrayAccess {
+	/** @var array[] */
 	private $routes;
 
-	/**
-	 * @var callable[]
-	 */
+	/** @var callable[] */
 	private $listeners = array();
+	/**
+	 * @var PatternConverter
+	 */
+	private $patternConverter;
 
 	/**
-	 * @param array $routes
+	 * @param PatternConverter $patternConverter
+	 * @internal param array $routes
 	 */
-	public function __construct(array $routes = array()) {
+	public function __construct(PatternConverter $patternConverter = null) {
 		$this->routes = $routes;
 		foreach($routes as $route => $data) {
 			$this->offsetSet($route, $data);
 		}
+		$this->patternConverter = $patternConverter;
 	}
 
 	/**
@@ -32,25 +34,14 @@ class Router implements ArrayAccess {
 	}
 
 	/**
-	 * @param string $request
-	 * @param string $method
-	 * @param array $getParams
+	 * @param string $key
 	 * @return array
 	 */
-	public function lookup($request, $method, $getParams = array()) {
-		$key = sprintf('%s %s', strtoupper($method), $request);
+	public function lookup($key) {
 		foreach($this->routes as $routeData) {
 			$matches = array();
 			$params = array();
 			if(preg_match($routeData['pattern'], $key, $matches)) {
-				if(!empty($routeData['queryParams'])) {
-					foreach($routeData['queryParams'] as $key => $value) {
-						if(!array_key_exists($key, $getParams) || $getParams[$key] !== $value) {
-							continue(2);
-						}
-						$params[$key] = $getParams[$key];
-					}
-				}
 				$matches = array_intersect_key($matches, array_flip(array_filter(array_keys($matches), 'ctype_alpha')));
 				$params = array_merge($params, $matches);
 				return array('data' => $routeData['data'], 'params' => $params);
@@ -121,10 +112,14 @@ class Router implements ArrayAccess {
 	 * @return string
 	 */
 	private function compileRoute($route) {
+		# '/(?:(?<!(?:\\x5c))(?:(?:\\x5c){2})*?(?:\[|\]))/'
+
 		$route = preg_quote($route, '/');
 		$route = str_replace(array('\\[', '\\]'), array('(?:', ')?'), $route);
-		$route = preg_replace('/(?:\\\:(\w+))/', '(?P<$1>\\w+)', $route);
-		return "/^{$route}$/";
+		$route = preg_replace('/(?:\\:(\w+))/', '(?P<$1>\\w+)', $route);
+		$pattern = "/^{$route}$/";
+		#var_dump($pattern);
+		return $pattern;
 	}
 
 	/**

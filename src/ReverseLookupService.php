@@ -13,7 +13,7 @@ class ReverseLookupService {
 	private $cache = array();
 
 	/**
-	 * @var Router
+	 * @var LookupTable
 	 */
 	private $router;
 
@@ -23,9 +23,9 @@ class ReverseLookupService {
 	private $fn;
 
 	/**
-	 * @param Router $router
+	 * @param LookupTable $router
 	 */
-	public function __construct(Router $router) {
+	public function __construct(LookupTable $router) {
 		$this->router = $router;
 		$this->fn = function ($data, $pattern) {
 			if(!array_key_exists('alias', $data['data'])) {
