@@ -27,25 +27,41 @@ class LookupTable implements ArrayAccess {
 	}
 
 	/**
-	 * @param string $key
+	 * @param string $pattern
 	 * @return array
 	 */
-	public function lookup($key) {
-		foreach($this->routes as $pattern => $routeData) {
-			if(!array_key_exists('pattern', $routeData)) {
-				$routeData['pattern'] = $this->patternConverter->convert($pattern);
+	public function lookup($pattern) {
+		foreach($this->routes as $key => $routeData) {
+			if(!$this->isMatching($key, $pattern)) {
+				continue;
 			}
-			print_r($pattern);
-			print_r($routeData);
 			$matches = array();
 			$params = array();
-			if(preg_match($routeData['pattern'], $key, $matches)) {
+			if(preg_match(sprintf('/^%s$/u', $routeData['pattern']), $key, $matches)) {
 				$matches = array_intersect_key($matches, array_flip(array_filter(array_keys($matches), 'ctype_alpha')));
 				$params = array_merge($params, $matches);
 				return array('data' => $routeData['data'], 'params' => $params);
 			}
 		}
 		return array('data' => null, 'params' => array());
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $data
+	 * @return bool
+	 */
+	public function isMatching($key, $data) {
+		if(!array_key_exists($key, $this->routes)) {
+			return false;
+		}
+		$routeData = $this->routes[$key];
+		if(!array_key_exists('pattern', $routeData)) {
+			$routeData['pattern'] = $this->patternConverter->convert($key);
+			$this->routes[$key] = $routeData;
+		}
+		$regularExpression = sprintf('/^%s$/u', $routeData['pattern']);
+		return (bool) preg_match($regularExpression, $data);
 	}
 
 	/**
