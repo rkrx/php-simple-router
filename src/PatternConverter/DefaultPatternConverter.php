@@ -7,12 +7,10 @@ class DefaultPatternConverter implements PatternConverter {
 	 * @return string
 	 */
 	public function convert($pattern) {
-		printf("%s\n", $pattern);
 		$parts = preg_split('/(?<![\\x5c])(?:[\\x5c]{2})*(\\[|\\]|:\\w+)/', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-		print_r($parts);
 		list($parts) = $this->buildParts($parts);
 		$pattern = join('', $parts);
-		return $pattern;
+		return sprintf("/^%s$/u", $pattern, $pattern);
 	}
 
 	/**
@@ -31,6 +29,7 @@ class DefaultPatternConverter implements PatternConverter {
 			} elseif($parts[$idx][0] === ':') {
 				$parts[$idx] = sprintf('(?P<%s>.*?)', substr($parts[$idx], 1));
 			} else {
+				$parts[$idx] = strtr($parts[$idx], ['\\\\' => '\\', '\\' => '']);
 				$parts[$idx] = preg_quote($parts[$idx], '/');
 			}
 		}
