@@ -66,7 +66,7 @@ class Router {
 	 * @return $this
 	 */
 	public function post($pattern, callable $callback, array $params = array()) {
-		$this->add(['GET'], $pattern, $callback, $params);
+		$this->add(['POST'], $pattern, $callback, $params);
 		return $this;
 	}
 
