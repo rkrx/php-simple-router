@@ -108,7 +108,6 @@ class Router {
 	 * @throws Exception
 	 */
 	public function dispatch($method, $url) {
-		http_response_code(500);
 		try {
 			$response = $this->getResponse($method, $url);
 			if(is_scalar($response)) {
@@ -122,6 +121,7 @@ class Router {
 			http_response_code(404);
 			exit;
 		} catch(Exception $e) {
+			http_response_code(500);
 			exit;
 		}
 	}
