@@ -1,5 +1,9 @@
-/.idea
-/atlassian-ide-plugin.xml
-/composer.lock
-/vendor
-/test.php
+/*
+!/src
+!/tests
+!/.gitignore
+!/.travis.yml
+!/composer.json
+!/LICENSE
+!/README.md
+!/tests.xml
