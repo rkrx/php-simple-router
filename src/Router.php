@@ -39,7 +39,7 @@ class Router {
 	 * @param array $params
 	 * @return $this
 	 */
-	public function add(array $methods, $pattern, callable $callback, array $params = array()) {
+	public function add(array $methods, $pattern, $callback, array $params = array()) {
 		$methods = array_map('strtoupper', $methods);
 		$this->router->addRoute($methods, $pattern, [
 			'callback' => $callback,
