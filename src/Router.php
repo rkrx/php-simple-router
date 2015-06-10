@@ -28,20 +28,23 @@ class Router {
 		$this->router = new TreeRouter();
 		$this->methodInvoker = $methodInvoker;
 
-		$this->setErrorHandler(function ($reason, $url, $method, Exception $exception = null) {
+		$this->setErrorHandler(function ($reason, $url, $method, $debugmode, Exception $exception = null) {
+			$fn = function ($reason, $url, $method, Exception $exception) use ($debugmode) {
+				if($debugmode) {
+					DebugOutput::show($reason, $url, $method, $exception);
+				}
+			};
+
 			switch ($reason) {
 				case RouterConstants::ERROR_ROUTE_NOT_FOUND:
 					http_response_code(404);
-					$this->generateDebugOutput($reason, $url, $method, $exception);
-					exit;
+					$fn($reason, $url, $method, $exception);
 				case RouterConstants::ERROR_METHOD_NOT_REGISTERED:
 					http_response_code(404);
-					$this->generateDebugOutput($reason, $url, $method, $exception);
-					exit;
+					$fn($reason, $url, $method, $exception);
 				case RouterConstants::ERROR_UNKNOWN:
 					http_response_code(500);
-					$this->generateDebugOutput($reason, $url, $method, $exception);
-					exit;
+					$fn($reason, $url, $method, $exception);
 			}
 		});
 	}
@@ -49,7 +52,7 @@ class Router {
 	/**
 	 * @return boolean
 	 */
-	public function isDebugMode() {
+	public function getDebugMode() {
 		return $this->debugMode;
 	}
 
@@ -161,12 +164,16 @@ class Router {
 			if(is_scalar($response)) {
 				echo $response;
 			}
-			http_response_code(200);
 		} catch(RouteNotFoundException $e) {
+			http_response_code(400);
 			$this->callErrorHandler(RouterConstants::ERROR_ROUTE_NOT_FOUND, $method, $url, $e);
+			exit;
 		} catch(MethodNotRegisteredException $e) {
+			http_response_code(400);
 			$this->callErrorHandler(RouterConstants::ERROR_METHOD_NOT_REGISTERED, $method, $url, $e);
+			exit;
 		} catch(Exception $e) {
+			http_response_code(500);
 			$this->callErrorHandler(RouterConstants::ERROR_UNKNOWN, $method, $url, $e);
 			exit;
 		}
@@ -183,20 +190,9 @@ class Router {
 			'reason' => $reason,
 			'method' => $method,
 			'url' => $url,
-			'exception' => $e
+			'exception' => $e,
+			'debugmode' => $this->getDebugMode()
 		];
 		$this->methodInvoker->invoke($this->errorHandler, $data);
-	}
-
-	/**
-	 * @param int $reason
-	 * @param string $url
-	 * @param string $method
-	 * @param Exception $exception
-	 */
-	private function generateDebugOutput($reason, $url, $method, Exception $exception = null) {
-		if($this->debugMode) {
-			DebugOutput::show($reason, $url, $method, $exception);
-		}
 	}
 }
