@@ -1,7 +1,7 @@
 <?php
 namespace Kir\Http\Routing\Http;
 
-class Redirect {
+class HttpRedirect {
 	/**
 	 * @param $address
 	 * @param int $type

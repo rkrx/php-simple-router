@@ -32,15 +32,15 @@ class Router {
 			switch ($reason) {
 				case RouterConstants::ERROR_ROUTE_NOT_FOUND:
 					http_response_code(404);
-					DebugOutput::show($reason, $url, $method, $exception);
+					$this->generateDebugOutput($reason, $url, $method, $exception);
 					exit;
 				case RouterConstants::ERROR_METHOD_NOT_REGISTERED:
 					http_response_code(404);
-					DebugOutput::show($reason, $url, $method, $exception);
+					$this->generateDebugOutput($reason, $url, $method, $exception);
 					exit;
 				case RouterConstants::ERROR_UNKNOWN:
 					http_response_code(500);
-					DebugOutput::show($reason, $url, $method, $exception);
+					$this->generateDebugOutput($reason, $url, $method, $exception);
 					exit;
 			}
 		});
@@ -186,5 +186,17 @@ class Router {
 			'exception' => $e
 		];
 		$this->methodInvoker->invoke($this->errorHandler, $data);
+	}
+
+	/**
+	 * @param int $reason
+	 * @param string $url
+	 * @param string $method
+	 * @param Exception $exception
+	 */
+	private function generateDebugOutput($reason, $url, $method, Exception $exception = null) {
+		if($this->debugMode) {
+			DebugOutput::show($reason, $url, $method, $exception);
+		}
 	}
 }
