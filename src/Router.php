@@ -39,12 +39,15 @@ class Router {
 				case RouterConstants::ERROR_ROUTE_NOT_FOUND:
 					http_response_code(404);
 					$fn($reason, $url, $method, $exception);
+					break;
 				case RouterConstants::ERROR_METHOD_NOT_REGISTERED:
 					http_response_code(404);
 					$fn($reason, $url, $method, $exception);
+					break;
 				case RouterConstants::ERROR_UNKNOWN:
 					http_response_code(500);
 					$fn($reason, $url, $method, $exception);
+					break;
 			}
 		});
 	}
