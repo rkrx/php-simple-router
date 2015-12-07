@@ -23,16 +23,16 @@ $_SERVER['REQUEST_METHOD'] = 'GET';
 // Should get overwritten by the /10 above
 $_GET['start'] = 20;
 
-/*
- * <?php return [
- *     'GET /' => ['class' => IndexCtrl::class, 'method' => 'start'],
- *     'GET /some/path' => ['class' => LoginCtrl::class, 'method' => 'test'],
- *     'GET /some/path/:start' => ['class' => 'UserCtrl::class', 'method' => 'test'],
- *     'GET /list:start?type=gallery' => ['class' => 'ProductsCtrl::class', 'method' => 'showGallery'],
- * ];
- */
-$_SERVER = array_merge(['REQUEST_URI' => '/', 'REQUEST_METHOD' => 'GET'], $_SERVER) 
-$router = new Router(require '../config/routes.php');
+$_SERVER = array_merge(['REQUEST_URI' => '/', 'REQUEST_METHOD' => 'GET'], $_SERVER);
+
+$routes = [
+  'GET /' => ['class' => IndexCtrl::class, 'method' => 'start'],
+  'GET /some/path' => ['class' => LoginCtrl::class, 'method' => 'test'],
+  'GET /some/path/:start' => ['class' => 'UserCtrl::class', 'method' => 'test'],
+  'GET /list:start?type=gallery' => ['class' => 'ProductsCtrl::class', 'method' => 'showGallery'],
+];
+
+$router = new Router($routes);
 $data = $router->lookup($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD'], $_REQUEST);
 
 print_r($data); // ['data' => ['class' => IndexCtrl::class, 'method' => 'start'], 'params' => []]
