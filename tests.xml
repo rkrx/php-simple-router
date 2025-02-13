@@ -1,14 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<phpunit
-	backupGlobals="false"
-	backupStaticAttributes="false"
-	colors="true"
-	verbose="true"
-	bootstrap="vendor/autoload.php"
-	convertErrorsToExceptions="true"
-	convertNoticesToExceptions="true"
-	convertWarningsToExceptions="true"
->
+<phpunit bootstrap="tests.php"
+		 backupGlobals="false"
+		 backupStaticAttributes="false"
+		 verbose="true">
+	<php>
+		<const name="PHPUNIT_IS_RUNNING" value="true"/>
+	</php>
 	<testsuites>
 		<testsuite name="Tests">
 			<directory>tests</directory>
