@@ -45,7 +45,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 class Router {
 	public const INSECURE = false;
 	public const SECURE = true;
-	
+
 	/** @var array<string, RouteAlias> */
 	private array $alias = [];
 	/** @var RouteUrlPartLookup */
@@ -55,7 +55,7 @@ class Router {
 	/** @var array<int, array<string, mixed>> */
 	private array $stack = [];
 	private string $defaultAlias;
-	
+
 	/**
 	 * @param string $webRoot Should be initialized with something like '/'
 	 * @param string $httpHost The http host of the environment. Example: example.org
@@ -67,16 +67,16 @@ class Router {
 		private readonly bool $isHttps,
 		private readonly EventDispatcherInterface $dispatcher
 	) {}
-	
+
 	public function getDefaultAlias(): string {
 		return $this->defaultAlias;
 	}
-	
+
 	public function setDefaultAlias(string $alias): Router {
 		$this->defaultAlias = $alias;
 		return $this;
 	}
-	
+
 	/**
 	 * @param string $alias
 	 * @param string $urlPart
@@ -89,7 +89,7 @@ class Router {
 	public function all(string $alias, string $urlPart, $callable, array $params = [], bool $https = true, array $preconditions = []) {
 		return $this->addRoute($alias, $urlPart, $callable, ['GET', 'POST'], $params, $https, $preconditions);
 	}
-	
+
 	/**
 	 * @param string $alias
 	 * @param string $urlPart
@@ -102,7 +102,7 @@ class Router {
 	public function get(string $alias, string $urlPart, $callable, array $params = [], bool $https = true, array $preconditions = []) {
 		return $this->addRoute($alias, $urlPart, $callable, ['GET'], $params, $https, $preconditions);
 	}
-	
+
 	/**
 	 * @param string $alias
 	 * @param string $urlPart
@@ -115,7 +115,7 @@ class Router {
 	public function post(string $alias, string $urlPart, $callable, array $params = [], bool $https = true, array $preconditions = []) {
 		return $this->addRoute($alias, $urlPart, $callable, ['POST'], $params, $https, $preconditions);
 	}
-	
+
 	/**
 	 * @param string $alias
 	 * @param string $urlPart
@@ -138,7 +138,7 @@ class Router {
 				'https' => $https,
 				'preconditions' => $preconditions
 			];
-			
+
 			$this->alias[$alias] = [
 				'ctrl' => $controller,
 				'method' => $method,
@@ -146,7 +146,7 @@ class Router {
 				'params' => $params,
 				'https' => $https
 			];
-			
+
 			$this->mod["{$controller}::{$method}"] = [
 				'alias' => $alias,
 				'url-part' => $urlPart,
@@ -154,10 +154,10 @@ class Router {
 				'https' => $https
 			];
 		}
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * Creates a link without adding parameters from the context
 	 *
@@ -173,7 +173,7 @@ class Router {
 				}
 			}
 		}
-		
+
 		if(array_key_exists('alias', $args)) { // Generate link from alias
 			/** @var string $alias */
 			$alias = $args['alias'];
@@ -206,14 +206,14 @@ class Router {
 			}
 			throw new AliasNotFoundException("Alias not found: {$alias}");
 		}
-		
+
 		if(array_key_exists('@target', $args)) { // Generate link from @target
 			/** @var array{class-string, string} $target */
 			$target = $args['@target'];
 			[$args['ctrl'], $args['method']] = $target;
 			unset($args['@target']);
 		}
-		
+
 		if(array_key_exists('ctrl', $args) && array_key_exists('method', $args)) { // Generate link from ctrl/method
 			/** @var array{ctrl: string, method: string} $parts */
 			$parts = $args;
@@ -239,13 +239,13 @@ class Router {
 				$requestUri = $this->buildParams($linkArgs, $args);
 				return sprintf('%s%s/%s', $this->buildHostname($mod['https']), rtrim($this->webRoot, '/'), ltrim($requestUri, '/'));
 			}
-			
+
 			throw new RoutingException("Ctrl/Method-Pair not found: {$key}");
 		}
-		
+
 		throw new RoutingException('Alias or Ctrl/Method not provided');
 	}
-	
+
 	/**
 	 * Creates a link to itself. Also adding parameters from the context.
 	 *
@@ -274,7 +274,7 @@ class Router {
 		}
 		return $this->linkTo(array_merge($args));
 	}
-	
+
 	/**
 	 * @template T
 	 * @param array<string, mixed>|array{alias?: string, ctrl?: string, method?: string} $arguments
@@ -307,7 +307,7 @@ class Router {
 			array_pop($this->stack);
 		}
 	}
-	
+
 	/**
 	 * @param string $httpMethod
 	 * @param string $requestUri
@@ -345,7 +345,7 @@ class Router {
 		}
 		return [$mod['alias'], $mod['ctrl'], $mod['method'], array_merge($defaults, $query, $args), $mod['preconditions']];
 	}
-	
+
 	/**
 	 * @param list<null|string> $pathParts
 	 * @param array<int|string, mixed> $queryParams
@@ -360,7 +360,7 @@ class Router {
 				$path[] = '_';
 			}
 		}
-		
+
 		while(count($path)) {
 			$part = array_pop($path);
 			if($part === '0' || $part === '_' || $part === '') {
@@ -369,10 +369,10 @@ class Router {
 			$path[] = $part;
 			break;
 		}
-		
+
 		$event = new BuildParamsEvent(queryParams: $queryParams);
 		$this->dispatcher->dispatch($event);
-		
+
 		$parts = [implode('/', $path)];
 		if(count($event->queryParams)) {
 			$query = http_build_query($event->queryParams);
@@ -380,10 +380,10 @@ class Router {
 				$parts[] = $query;
 			}
 		}
-		
+
 		return implode('?', $parts);
 	}
-	
+
 	/**
 	 * @param string $requestUri
 	 * @return array{null|string, array<int|string, mixed>}
@@ -397,7 +397,7 @@ class Router {
 		}
 		return [$path ?: null, $query];
 	}
-	
+
 	/**
 	 * @param string $requestUri
 	 * @return array<int|string, string|mixed[]>
@@ -408,31 +408,31 @@ class Router {
 		parse_str((string) $query, $res);
 		return $res;
 	}
-	
+
 	/**
 	 * @param bool $https
 	 * @return string
 	 */
 	private function buildHostname(bool $https): string {
 		$hostnameWithSchema = '';
-		
+
 		if($this->httpHost) {
 			$http = 'http';
 			$hostnameWithSchema = "$http://{$this->httpHost}";
-			
+
 			if($https || $this->isHttps) {
 				$hostnameWithSchema = "https://{$this->httpHost}";
 			}
 		}
-		
+
 		$event = new BuildHostnameWithSchemaEvent(
 			hostname: $this->httpHost,
 			isHttps: $this->isHttps,
 			result: $hostnameWithSchema
 		);
-		
+
 		$this->dispatcher->dispatch($event);
-		
-		return '';
+
+		return $event->result;
 	}
 }
