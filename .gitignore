@@ -1,9 +1,11 @@
 /*
 !/src
 !/tests
+!/.editorconfig
+!/.gitattributes
 !/.gitignore
+!/.travis.yml
 !/composer.json
-!/phpstan.neon
+!/LICENSE
 !/README.md
-!/tests.php
 !/tests.xml
