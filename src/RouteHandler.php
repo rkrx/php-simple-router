@@ -4,6 +4,7 @@ namespace Kir\Http\Routing;
 
 use Closure;
 use Ioc\MethodInvoker;
+use Kir\Http\Routing\Common\PreProcessRequest;
 use Kir\Http\Routing\Exceptions\InvalidReturnTypeException;
 use Kir\Http\Routing\Exceptions\NoPostProcessorDefinedForTypeException;
 use Kir\Http\Routing\Exceptions\UndefinedRouterException;
@@ -26,6 +27,8 @@ use Throwable;
  */
 class RouteHandler {
 	private readonly Router $router;
+	/** @var array<callable(PreProcessRequest):void> */
+	private array $preProcessors = [];
 	/** @var array<string, HandlerType> */
 	private array $postProcessors = [];
 	/** @var null|callable */
@@ -111,6 +114,14 @@ class RouteHandler {
 	}
 
 	/**
+	 * @param callable(PreProcessRequest):void $fn
+	 * @return void
+	 */
+	public function addPreProcessor($fn): void {
+		$this->preProcessors[] = $fn;
+	}
+
+	/**
 	 * @template T of AbstractHttpResponse
 	 * @param class-string<T> $className
 	 * @param Closure(T, ResponseInterface):ResponseInterface $handler
@@ -147,6 +158,15 @@ class RouteHandler {
 			$parsedBodyParams = self::getOnlyStringKeysInParsedBodyParams($parsedBody);
 
 			$callParams = array_merge($request->getQueryParams(), $route->params, $parsedBodyParams);
+
+			$preProcessRequest = new PreProcessRequest(handler: $handler);
+			foreach($this->preProcessors as $preProcessFn) {
+				$preProcessFn($preProcessRequest);
+
+				if($preProcessRequest->stopPropagation) {
+					break;
+				}
+			}
 
 			$result = $this->methodInvoker->invoke($handler, $callParams);
 			if(!($result instanceof AbstractHttpResponse)) {
