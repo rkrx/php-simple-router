@@ -9,7 +9,6 @@ use Kir\Http\Routing\Exceptions\NoPostProcessorDefinedForTypeException;
 use Kir\Http\Routing\Exceptions\UndefinedRouterException;
 use Kir\Http\Routing\ResponseTypes\AbstractHttpResponse;
 use Kir\Http\Routing\ResponseTypes\BinaryContentResponse;
-use Kir\Http\Routing\ResponseTypes\CSVDownloadGeneratorResponse;
 use Kir\Http\Routing\ResponseTypes\HtmlResponse;
 use Kir\Http\Routing\ResponseTypes\JsonResponse;
 use Kir\Http\Routing\ResponseTypes\MimeTypeContentResponse;
@@ -20,9 +19,7 @@ use Kir\Http\Routing\Router\RouterConstants;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
-use RuntimeException;
 use Throwable;
-use function PHPUnit\Framework\isArray;
 
 /**
  * @phpstan-type HandlerType Closure(object, ResponseInterface):ResponseInterface

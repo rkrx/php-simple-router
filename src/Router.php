@@ -3,15 +3,10 @@ namespace Kir\Http\Routing;
 
 use Aura\Router\Exception\ImmutableProperty;
 use Aura\Router\Exception\RouteAlreadyExists;
-use Exception;
+use Aura\Router\RouterContainer;
 use Kir\Http\Routing\Common\Route;
 use Kir\Http\Routing\Common\ServerRequest;
 use Kir\Http\Routing\Common\Uri;
-use Kir\Http\Routing\ResponseTypes\AbstractHttpResponse;
-use Kir\Http\Routing\Router\MethodNotRegisteredException;
-use Kir\Http\Routing\Router\RouteNotFoundException;
-use Kir\Http\Routing\Router\RouterConstants;
-use Aura\Router\RouterContainer;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 
