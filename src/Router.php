@@ -4,8 +4,10 @@ namespace Kir\Http\Routing;
 use Aura\Router\Exception\ImmutableProperty;
 use Aura\Router\Exception\RouteAlreadyExists;
 use Aura\Router\RouterContainer;
+use Kir\Http\Routing\Common\Response;
 use Kir\Http\Routing\Common\Route;
 use Kir\Http\Routing\Common\ServerRequest;
+use Kir\Http\Routing\Common\Stream;
 use Kir\Http\Routing\Common\Uri;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -13,7 +15,7 @@ use RuntimeException;
 class Router {
 	private readonly RouterContainer $router;
 
-	public static function createServerRequest(): ServerRequestInterface {
+	public static function createServerRequest(): ServerRequest {
 		/** @var array{HTTPS?: string, HTTP_HOST?: string, REQUEST_METHOD: string, SERVER_NAME?: string, SERVER_PORT?: string|int, REQUEST_URI?: string, QUERY_STRING?: string, CONTENT_TYPE?: string} $serverVars */
 		$serverVars = $_SERVER;
 
@@ -43,6 +45,10 @@ class Router {
 			queryParams: $queryParams,
 			parsedBody: $parsedBody
 		);
+	}
+
+	public static function createResponse(): Response {
+		return new Response(body: new Stream);
 	}
 
 	public function __construct() {
