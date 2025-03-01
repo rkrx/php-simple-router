@@ -23,6 +23,20 @@ class RouterTest extends TestCase {
 		self::assertEquals(['id' => 123], $route->params);
 	}
 
+	public function testLookupWithQueryParams(): void {
+		$uri = new Uri('http://test.localhost/test/123?abc=123');
+		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
+
+		$router = new Router();
+		$router->get(name: 'some.name', pattern: '/test/{id}', handler: fn (int $id) => new HtmlResponse((string) $id));
+		$route = $router->lookup($serverRequest);
+
+		self::assertInstanceOf(Route::class, $route);
+		self::assertEquals('some.name', $route->name);
+		self::assertEquals('GET', $route->method);
+		self::assertEquals(['id' => 123, 'abc' => 123], $route->params);
+	}
+
 	public function testDispatch(): void {
 		$uri = new Uri('http://test.localhost/test/123');
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
