@@ -1,10 +1,8 @@
 <?php
-namespace Kir\Http\Routing;
+namespace Kir\Http\Routing\Common;
 
 use Ioc\Exceptions\DefinitionNotFoundException;
-use Ioc\Exceptions\Exceptions\ParameterMissingException;
 use Ioc\MethodInvoker;
-use Kir\Http\Routing\ResponseTypes\HtmlResponse;
 use ReflectionException;
 use ReflectionFunction;
 

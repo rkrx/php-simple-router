@@ -3,6 +3,7 @@ namespace Kir\Http\Routing;
 
 use Kir\Http\Routing\Common\Route;
 use Kir\Http\Routing\Common\ServerRequest;
+use Kir\Http\Routing\Common\TestMethodInvoker;
 use Kir\Http\Routing\Common\Uri;
 use Kir\Http\Routing\ResponseTypes\HtmlResponse;
 use PHPUnit\Framework\TestCase;
