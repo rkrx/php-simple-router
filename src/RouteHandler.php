@@ -22,6 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use RuntimeException;
 use Throwable;
+use function PHPUnit\Framework\isArray;
 
 /**
  * @phpstan-type HandlerType Closure(object, ResponseInterface):ResponseInterface
@@ -83,9 +84,29 @@ class RouteHandler {
 				case RouterConstants::ERROR_METHOD_NOT_REGISTERED:
 					throw new MethodNotRegisteredException(url: $url, method: $method);
 				case RouterConstants::ERROR_UNKNOWN:
+					if($exception !== null) {
+						throw $exception;
+					}
 					throw new UndefinedRouterException(url: $url, method: $method);
 			}
 		});
+	}
+
+	/**
+	 * @param mixed $parsedBody
+	 * @return array<string, mixed>
+	 */
+	private static function getOnlyStringKeysInParsedBodyParams(mixed $parsedBody): array {
+		if(!is_array($parsedBody)) {
+			return [];
+		}
+		$result = [];
+		foreach($parsedBody as $key => $value) {
+			if(!is_numeric($key)) {
+				$parsedBodyParams[$key] = $value;
+			}
+		}
+		return $result;
 	}
 
 	public function getRouter(): Router {
@@ -124,7 +145,13 @@ class RouteHandler {
 				);
 			}
 			$handler = $route->handler;
-			$result = $this->methodInvoker->invoke($handler, $route->params);
+
+			$parsedBody = $request->getParsedBody();
+			$parsedBodyParams = self::getOnlyStringKeysInParsedBodyParams($parsedBody);
+
+			$callParams = array_merge($request->getQueryParams(), $route->params, $parsedBodyParams);
+
+			$result = $this->methodInvoker->invoke($handler, $callParams);
 			if(!($result instanceof AbstractHttpResponse)) {
 				throw new InvalidReturnTypeException();
 			}
