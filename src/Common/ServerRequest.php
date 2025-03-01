@@ -14,6 +14,8 @@ class ServerRequest implements ServerRequestInterface {
 	private array $headers = [];
 	private StreamInterface $body;
 	/** @var array<string, mixed> */
+	private array $queryParams = [];
+	/** @var array<string, mixed> */
 	private array $serverParams = [];
 	/** @var array<string, string> */
 	private array $cookieParams = [];
@@ -30,9 +32,14 @@ class ServerRequest implements ServerRequestInterface {
 	public function __construct(
 		public string $method,
 		public UriInterface $uri,
-		public array $queryParams,
+		array $queryParams,
 		public mixed $parsedBody
-	) {}
+	) {
+		parse_str($uri->getQuery(), $uriQueryParams);
+		/** @var array<string, mixed> $mergedQueryParams */
+		$mergedQueryParams = array_merge($uriQueryParams, $queryParams);
+		$this->queryParams = $mergedQueryParams;
+	}
 
 	public function getProtocolVersion(): string {
 		return $this->protocolVersion;
