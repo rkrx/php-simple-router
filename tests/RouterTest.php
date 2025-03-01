@@ -1,39 +1,39 @@
 <?php
 namespace Kir\Http\Routing;
 
-class RouterTest extends \PHPUnit_Framework_TestCase {
-	public function testLookup() {
-		$router = new Router(new TestMethodInvoker());
-		$router->get('/test/{id}', function ($id) {
-			return $id;
-		});
-		$route = $router->lookup('/test/111');
-		$this->assertArrayHasKey('methods', $route);
-		$this->assertArrayHasKey('GET', $route['methods']);
-		$this->assertArrayHasKey('callback', $route['methods']['GET']);
-		$this->assertArrayHasKey('params', $route['methods']['GET']);
-		$this->assertEquals('/test/{id}', $route['route']);
-		$this->assertEquals('111', $route['params']['id']);
+use Kir\Http\Routing\Common\Route;
+use Kir\Http\Routing\Common\ServerRequest;
+use Kir\Http\Routing\Common\Uri;
+use Kir\Http\Routing\ResponseTypes\HtmlResponse;
+use PHPUnit\Framework\TestCase;
+use Zend\Diactoros\Response;
 
+class RouterTest extends TestCase {
+	public function testLookup(): void {
+		$uri = new Uri('http://test.localhost/test/123');
+		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
+
+		$router = new Router();
+		$router->get(name: 'some.name', pattern: '/test/{id}', handler: fn (int $id) => new HtmlResponse((string) $id));
+		$route = $router->lookup($serverRequest);
+
+		self::assertInstanceOf(Route::class, $route);
+		self::assertEquals('some.name', $route->name);
+		self::assertEquals('GET', $route->method);
+		self::assertEquals(['id' => 123], $route->params);
 	}
 
-	public function testGetResponse() {
-		$router = new Router(new TestMethodInvoker());
-		$router->get('/test/{id}', function ($id) {
-			return $id;
-		});
-		$response = $router->getResponse('GET', '/test/111');
-		$this->assertEquals('Test1234', $response);
-	}
+	public function testDispatch(): void {
+		$uri = new Uri('http://test.localhost/test/123');
+		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
-	public function testDispatch() {
-		$router = new Router(new TestMethodInvoker());
-		$router->get('/test/{id}', function ($id) {
-			return $id;
-		});
-		ob_start();
-		$router->dispatch('GET', '/test/111');
-		$content = ob_get_clean();
-		$this->assertEquals('Test1234', $content);
+		$router = new RouteHandler(new TestMethodInvoker());
+		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', handler: fn (int $id) => new HtmlResponse((string) $id));
+
+		$result = $router->dispatch(request: $serverRequest, response: new Response());
+
+		self::assertInstanceOf(Response::class, $result);
+		self::assertEquals(['text/html; charset=utf-8'], $result->getHeader('Content-Type'));
+		self::assertEquals('123', $result->getBody()->getContents());
 	}
 }

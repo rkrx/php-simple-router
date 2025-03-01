@@ -4,16 +4,39 @@ namespace Kir\Http\Routing;
 use Ioc\Exceptions\DefinitionNotFoundException;
 use Ioc\Exceptions\Exceptions\ParameterMissingException;
 use Ioc\MethodInvoker;
+use Kir\Http\Routing\ResponseTypes\HtmlResponse;
+use ReflectionException;
+use ReflectionFunction;
 
 class TestMethodInvoker implements MethodInvoker {
 	/**
 	 * @param callable $callable
-	 * @param array $arguments Must be an array were the keys match to the Variable-Names of the __construct'ors parameters.
+	 * @param array<string, mixed> $arguments Must be an array were the keys match to the Variable-Names of the __construct'ors parameters.
 	 * @throws DefinitionNotFoundException
-	 * @throws ParameterMissingException
 	 * @return mixed
 	 */
-	public function invoke($callable, array $arguments = array()) {
-		return 'Test1234';
+	public function invoke($callable, array $arguments = []) {
+		$params = self::assocParams($callable, $arguments);
+		return $callable(...$params);
+	}
+
+	/**
+	 * @param callable $callback
+	 * @param array<string, mixed> $arguments
+	 * @return mixed[]
+	 * @throws ReflectionException
+	 */
+	private static function assocParams($callback, array $arguments): array {
+		// @phpstan-ignore-next-line
+		$reflection = new ReflectionFunction($callback);
+
+		$result = [];
+		foreach ($reflection->getParameters() as $parameter) {
+			if(!array_key_exists($parameter->name, $arguments)) {
+				break;
+			}
+			$result[] = $arguments[$parameter->name];
+		}
+		return $result;
 	}
 }

@@ -4,9 +4,10 @@
 !/.editorconfig
 !/.gitattributes
 !/.gitignore
-!/.travis.yml
-!/composer.json
 !/LICENSE
 !/README.md
+!/composer.json
+!/phpstan.neon
 !/rector.php
+!/tests.php
 !/tests.xml

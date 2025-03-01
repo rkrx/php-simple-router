@@ -10,14 +10,18 @@
 		"email": "ron.kirschler@gmail.com"
 	}],
 	"require": {
-		"php": ">= 5.4.0",
-		"psr/http-message": "1.*",
+		"php": ">= 8.1",
+
+		"aura/router": "^3.3",
+		"psr/http-message": ">= 1.0",
 		"rkr/php-ioc-contract": "*",
 		"rkr/recursive-array-accessor": "3.*"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "3.7.*",
-		"rkr/php-di-ioc-adapter": "*"
+		"rkr/php-di-ioc-adapter": "*",
+		"phpstan/phpstan": "^2.1",
+		"phpunit/phpunit": "^12.0",
+		"zendframework/zend-diactoros": "^1.3"
 	},
 	"autoload": {
 		"psr-4": {
@@ -28,5 +32,8 @@
 		"psr-4": {
 			"Kir\\Http\\Routing\\": ["src/", "tests/"]
 		}
+	},
+	"scripts": {
+		"phpstan": "phpstan analyse -c phpstan.neon --memory-limit=2G"
 	}
 }

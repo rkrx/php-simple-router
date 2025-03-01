@@ -1,201 +1,116 @@
 <?php
 namespace Kir\Http\Routing;
 
+use Aura\Router\Exception\ImmutableProperty;
+use Aura\Router\Exception\RouteAlreadyExists;
 use Exception;
-use Ioc\MethodInvoker;
-use Kir\Http\Routing\Router\DebugOutput;
+use Kir\Http\Routing\Common\Route;
+use Kir\Http\Routing\Common\ServerRequest;
+use Kir\Http\Routing\Common\Uri;
+use Kir\Http\Routing\ResponseTypes\AbstractHttpResponse;
 use Kir\Http\Routing\Router\MethodNotRegisteredException;
 use Kir\Http\Routing\Router\RouteNotFoundException;
 use Kir\Http\Routing\Router\RouterConstants;
-use Kir\Http\Routing\Router\TreeRouter;
+use Aura\Router\RouterContainer;
+use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 class Router {
-	/** @var TreeRouter */
-	private $router;
-	/** @var MethodInvoker */
-	private $methodInvoker;
-	/** @var callable */
-	private $postProcessor = null;
-	/** @var callable */
-	private $errorHandler;
-	/** @var bool */
-	private $debugMode;
+	private readonly RouterContainer $router;
 
-	/**
-	 * @param MethodInvoker $methodInvoker
-	 */
-	public function __construct(MethodInvoker $methodInvoker) {
-		$this->router = new TreeRouter();
-		$this->methodInvoker = $methodInvoker;
+	public static function createServerRequest(): ServerRequestInterface {
+		/** @var array{HTTPS?: string, HTTP_HOST?: string, REQUEST_METHOD: string, SERVER_NAME?: string, SERVER_PORT?: string|int, REQUEST_URI?: string, QUERY_STRING?: string, CONTENT_TYPE?: string} $serverVars */
+		$serverVars = $_SERVER;
 
-		$this->setErrorHandler(function ($reason, $url, $method, $debugmode, Exception $exception = null) {
-			$fn = function ($reason, $url, $method, Exception $exception) use ($debugmode) {
-				if($debugmode) {
-					DebugOutput::show($reason, $url, $method, $exception);
-				}
-			};
+		$scheme = (($serverVars['HTTPS'] ?? 'off') !== 'off') ? 'https' : 'http';
+		$host = $serverVars['HTTP_HOST'] ?? $serverVars['SERVER_NAME'] ?? 'localhost';
+		$port = $serverVars['SERVER_PORT'] ?? null;
+		$path = $serverVars['REQUEST_URI'] ?? '/';
 
-			switch ($reason) {
-				case RouterConstants::ERROR_ROUTE_NOT_FOUND:
-					http_response_code(404);
-					$fn($reason, $url, $method, $exception);
-					break;
-				case RouterConstants::ERROR_METHOD_NOT_REGISTERED:
-					http_response_code(404);
-					$fn($reason, $url, $method, $exception);
-					break;
-				case RouterConstants::ERROR_UNKNOWN:
-					http_response_code(500);
-					$fn($reason, $url, $method, $exception);
-					break;
+		$uri = new Uri(sprintf('%s://%s%s%s', $scheme, $host, ($port && !in_array($port, [80, 443]) ? ":$port" : ''), $path));
+
+		/** @var array<string, mixed> $queryParams */
+		$queryParams = $_GET;
+
+		$parsedBody = $_POST;
+
+		if(str_contains($serverVars['CONTENT_TYPE'] ?? '', 'application/json')) {
+			$json = file_get_contents('php://input');
+			if($json === false) {
+				throw new RuntimeException('Invalid input');
 			}
-		});
+			$parsedBody = json_decode(json: $json, associative: true, depth: 512, flags: JSON_THROW_ON_ERROR);
+		}
+
+		return new ServerRequest(
+			method: $serverVars['REQUEST_METHOD'],
+			uri: $uri,
+			queryParams: $queryParams,
+			parsedBody: $parsedBody
+		);
+	}
+
+	public function __construct() {
+		$this->router = new RouterContainer();
 	}
 
 	/**
-	 * @return boolean
-	 */
-	public function getDebugMode() {
-		return $this->debugMode;
-	}
-
-	/**
-	 * @param boolean $debugMode
-	 * @return $this
-	 */
-	public function setDebugMode($debugMode) {
-		$this->debugMode = $debugMode;
-		return $this;
-	}
-
-	/**
-	 * @param callable $postProcessor
-	 * @return $this
-	 */
-	public function setPostProcessor($postProcessor) {
-		$this->postProcessor = $postProcessor;
-		return $this;
-	}
-
-	/**
-	 * @param callable $errorHandler
-	 * @return $this
-	 */
-	public function setErrorHandler($errorHandler) {
-		$this->errorHandler = $errorHandler;
-		return $this;
-	}
-
-	/**
-	 * @param array $methods
+	 * @param string $name
+	 * @param string[] $methods
 	 * @param string $pattern
-	 * @param callable $callback
-	 * @param array $params
+	 * @param callable $handler
 	 * @return $this
+	 * @throws ImmutableProperty
+	 * @throws RouteAlreadyExists
 	 */
-	public function add(array $methods, $pattern, $callback, array $params = array()) {
-		$methods = array_map('strtoupper', $methods);
-		$this->router->addRoute($methods, $pattern, [
-			'callback' => $callback,
-			'params' => $params
-		]);
+	public function add(string $name, array $methods, string $pattern, $handler): self {
+		$this->router->getMap()->route(name: $name, path: $pattern, handler: $handler)->allows($methods);
 		return $this;
 	}
 
 	/**
+	 * @param string $name
 	 * @param string $pattern
-	 * @param callable $callback
-	 * @param array $params
+	 * @param callable $handler
 	 * @return $this
 	 */
-	public function get($pattern, $callback, array $params = array()) {
-		$this->add(['GET'], $pattern, $callback, $params);
+	public function get(string $name, string $pattern, $handler) {
+		$this->add(name: $name, methods: ['GET'], pattern: $pattern, handler: $handler);
 		return $this;
 	}
 
 	/**
+	 * @param string $name
 	 * @param string $pattern
-	 * @param callable $callback
-	 * @param array $params
+	 * @param callable $handler
 	 * @return $this
 	 */
-	public function post($pattern, $callback, array $params = array()) {
-		$this->add(['POST'], $pattern, $callback, $params);
+	public function post(string $name, string $pattern, $handler) {
+		$this->add(name: $name, methods: ['POST'], pattern: $pattern, handler: $handler);
 		return $this;
 	}
 
 	/**
-	 * @param string $url
-	 * @return array|null
+	 * @param ServerRequestInterface $request
+	 * @return Route|null
 	 */
-	public function lookup($url) {
-		$data = $this->router->match($url);
-		return $data;
-	}
+	public function lookup(ServerRequestInterface $request): ?Route {
+		$route = $this->router->getMatcher()->match($request);
+		if($route === false) {
+			return null;
+		}
 
-	/**
-	 * @param string $method
-	 * @param string $url
-	 * @return mixed
-	 * @throws Exception
-	 */
-	public function getResponse($method, $url) {
-		$route = $this->lookup($url);
-		if($route === null) {
-			throw new RouteNotFoundException($method, $url);
-		}
-		if(!array_key_exists($method, $route['methods'])) {
-			throw new MethodNotRegisteredException($method, $url);
-		}
-		$routeData = $route['methods'][$method];
-		$result = $this->methodInvoker->invoke($routeData['callback'], $route['params']);
-		if($this->postProcessor !== null) {
-			$result = $this->methodInvoker->invoke($this->postProcessor, array_merge($routeData['params'], ['result' => $result]));
-		}
-		return $result;
-	}
+		/** @var array<string, mixed> $attributes */
+		$attributes = $route->attributes;
 
-	/**
-	 * @param string $method
-	 * @param string $url
-	 * @return mixed
-	 * @throws Exception
-	 */
-	public function dispatch($method, $url) {
-		try {
-			$response = $this->getResponse($method, $url);
-			if(is_scalar($response)) {
-				echo $response;
-			}
-		} catch(RouteNotFoundException $e) {
-			http_response_code(400);
-			$this->callErrorHandler(RouterConstants::ERROR_ROUTE_NOT_FOUND, $method, $url, $e);
-			exit;
-		} catch(MethodNotRegisteredException $e) {
-			http_response_code(400);
-			$this->callErrorHandler(RouterConstants::ERROR_METHOD_NOT_REGISTERED, $method, $url, $e);
-			exit;
-		} catch(Exception $e) {
-			http_response_code(500);
-			$this->callErrorHandler(RouterConstants::ERROR_UNKNOWN, $method, $url, $e);
-			exit;
-		}
-	}
+		/** @var callable $handler */
+		$handler = $route->handler;
 
-	/**
-	 * @param int $reason
-	 * @param string $method
-	 * @param string $url
-	 * @param Exception $e
-	 */
-	private function callErrorHandler($reason, $method, $url, Exception $e) {
-		$data = [
-			'reason' => $reason,
-			'method' => $method,
-			'url' => $url,
-			'exception' => $e,
-			'debugmode' => $this->getDebugMode()
-		];
-		$this->methodInvoker->invoke($this->errorHandler, $data);
+		return new Route(
+			name: $route->name,
+			method: $request->getMethod(),
+			params: $attributes,
+			handler: $handler
+		);
 	}
 }
