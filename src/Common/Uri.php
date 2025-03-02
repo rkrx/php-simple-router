@@ -13,6 +13,18 @@ class Uri implements UriInterface {
 	private string $query;
 	private string $fragment;
 
+	public static function fromEnv(): self {
+		/** @var array{HTTPS?: string, HTTP_HOST?: string, SERVER_NAME?: string, SERVER_PORT?: string|int, REQUEST_URI?: string, QUERY_STRING?: string} $serverVars */
+		$serverVars = $_SERVER;
+
+		$scheme = (($serverVars['HTTPS'] ?? 'off') !== 'off') ? 'https' : 'http';
+		$host = $serverVars['HTTP_HOST'] ?? $serverVars['SERVER_NAME'] ?? 'localhost';
+		$port = $serverVars['SERVER_PORT'] ?? null;
+		$path = $serverVars['REQUEST_URI'] ?? '/';
+
+		return new Uri(sprintf('%s://%s%s%s', $scheme, $host, ($port && !in_array($port, [80, 443]) ? ":$port" : ''), $path));
+	}
+
 	public function __construct(string $uri = '') {
 		$parts = parse_url($uri);
 		$this->scheme = $parts['scheme'] ?? '';
