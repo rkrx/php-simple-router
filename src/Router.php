@@ -15,9 +15,7 @@ use RuntimeException;
 class Router {
 	private readonly RouterContainer $router;
 
-	public static function createServerRequest(): ServerRequest {
-		$uri = Uri::fromEnv();
-
+	public static function createServerRequest(Uri $uri): ServerRequest {
 		/** @var array<string, mixed> $queryParams */
 		$queryParams = $_GET;
 
