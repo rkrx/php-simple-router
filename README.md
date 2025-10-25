@@ -15,9 +15,9 @@ Workflow:
 
 This is what the bootstrap could look like:
 
-```PHP
+```php
 // Setup some test-request-parameters
-$_SERVER['REQUEST_URI'] = '/some/path/10';
+$_SERVER['REQUEST_URI'] = '/';
 $_SERVER['REQUEST_METHOD'] = 'GET';
 
 // Should get overwritten by the /10 above
@@ -25,15 +25,32 @@ $_GET['start'] = 20;
 
 $_SERVER = array_merge(['REQUEST_URI' => '/', 'REQUEST_METHOD' => 'GET'], $_SERVER);
 
-$routes = [
-  'GET /' => ['class' => IndexCtrl::class, 'method' => 'start'],
-  'GET /some/path' => ['class' => LoginCtrl::class, 'method' => 'test'],
-  'GET /some/path/:start' => ['class' => 'UserCtrl::class', 'method' => 'test'],
-  'GET /list:start?type=gallery' => ['class' => 'ProductsCtrl::class', 'method' => 'showGallery'],
-];
-
 $router = new Router($routes);
-$data = $router->lookup($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD'], $_REQUEST);
+$router->get('start', '/', ['entryPoint' => [IndexCtrl::class, 'show']]);
+$router->post('login', '/login', ['entryPoint' => [LoginCtrl::class, 'login']]);
 
-print_r($data); // ['data' => ['class' => IndexCtrl::class, 'method' => 'start'], 'params' => []]
+$request = $router::createServerRequestFromEnv();
+$route = $router->lookup($request);
+
+print_r($route); 
+
+// Kir\Http\Routing\Common\Route Object
+// (
+//     [name] => start
+//     [method] => GET
+//     [attributes] => Array
+//         (
+//         )
+// 
+//     [params] => Array
+//         (
+//             [entryPoint] => Array
+//                 (
+//                     [0] => OpenSearchTools\Controllers\SearchCtrl
+//                     [1] => show
+//                 )
+// 
+//         )
+// 
+// )
 ```
