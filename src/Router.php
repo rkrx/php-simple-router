@@ -15,7 +15,7 @@ use RuntimeException;
 class Router {
 	private readonly RouterContainer $router;
 
-	public static function createServerRequest(Uri $uri): ServerRequest {
+	public static function createServerRequestFromEnv(?Uri $uri = null): ServerRequest {
 		/** @var array<string, mixed> $queryParams */
 		$queryParams = $_GET;
 
@@ -31,6 +31,8 @@ class Router {
 			}
 			$parsedBody = json_decode(json: $json, associative: true, depth: 512, flags: JSON_THROW_ON_ERROR);
 		}
+
+		$uri ??= new Uri(is_string($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
 
 		return new ServerRequest(
 			method: $serverVars['REQUEST_METHOD'],
@@ -52,35 +54,57 @@ class Router {
 	 * @param string $name
 	 * @param string[] $methods
 	 * @param string $pattern
-	 * @param callable $handler
+	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 * @throws ImmutableProperty
 	 * @throws RouteAlreadyExists
 	 */
-	public function add(string $name, array $methods, string $pattern, $handler): self {
-		$this->router->getMap()->route(name: $name, path: $pattern, handler: $handler)->allows($methods);
+	public function add(string $name, array $methods, string $pattern, $params): self {
+		$this->router->getMap()->route(name: $name, path: $pattern, handler: fn() => $params)->allows($methods);
 		return $this;
 	}
 
 	/**
 	 * @param string $name
 	 * @param string $pattern
-	 * @param callable $handler
+	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 */
-	public function get(string $name, string $pattern, $handler) {
-		$this->add(name: $name, methods: ['GET'], pattern: $pattern, handler: $handler);
+	public function get(string $name, string $pattern, $params) {
+		$this->add(name: $name, methods: ['GET'], pattern: $pattern, params: $params);
 		return $this;
 	}
 
 	/**
 	 * @param string $name
 	 * @param string $pattern
-	 * @param callable $handler
+	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 */
-	public function post(string $name, string $pattern, $handler) {
-		$this->add(name: $name, methods: ['POST'], pattern: $pattern, handler: $handler);
+	public function post(string $name, string $pattern, $params) {
+		$this->add(name: $name, methods: ['POST'], pattern: $pattern, params: $params);
+		return $this;
+	}
+
+	/**
+	 * @param string $name
+	 * @param string $pattern
+	 * @param callable|array<string, mixed>|object $params
+	 * @return $this
+	 */
+	public function put(string $name, string $pattern, $params) {
+		$this->add(name: $name, methods: ['PUT'], pattern: $pattern, params: $params);
+		return $this;
+	}
+
+	/**
+	 * @param string $name
+	 * @param string $pattern
+	 * @param callable|array<string, mixed>|object $params
+	 * @return $this
+	 */
+	public function delete(string $name, string $pattern, $params) {
+		$this->add(name: $name, methods: ['DELETE'], pattern: $pattern, params: $params);
 		return $this;
 	}
 
@@ -100,11 +124,14 @@ class Router {
 		/** @var callable $handler */
 		$handler = $route->handler;
 
+		/** @var callable|array<string, mixed>|object $params */
+		$params = $handler();
+
 		return new Route(
 			name: $route->name,
 			method: $request->getMethod(),
-			params: $attributes,
-			handler: $handler
+			attributes: $attributes,
+			params: $params
 		);
 	}
 }

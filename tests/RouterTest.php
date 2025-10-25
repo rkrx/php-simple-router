@@ -15,13 +15,13 @@ class RouterTest extends TestCase {
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
 		$router = new Router();
-		$router->get(name: 'some.name', pattern: '/test/{id}', handler: fn (int $id) => new HtmlResponse((string) $id));
+		$router->get(name: 'some.name', pattern: '/test/{id}', params: fn (int $id) => new HtmlResponse((string) $id));
 		$route = $router->lookup($serverRequest);
 
 		self::assertInstanceOf(Route::class, $route);
 		self::assertEquals('some.name', $route->name);
 		self::assertEquals('GET', $route->method);
-		self::assertEquals(['id' => 123], $route->params);
+		self::assertEquals(['id' => 123], $route->attributes);
 	}
 
 	public function testDispatch(): void {
@@ -29,7 +29,7 @@ class RouterTest extends TestCase {
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
 		$router = new RouteHandler(new TestMethodInvoker());
-		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', handler: fn (int $id) => new HtmlResponse((string) $id));
+		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', params: fn (int $id) => new HtmlResponse((string) $id));
 
 		$result = $router->dispatch(request: $serverRequest, response: new Response());
 

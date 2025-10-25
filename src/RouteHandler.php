@@ -152,12 +152,14 @@ class RouteHandler {
 					method: $request->getMethod()
 				);
 			}
-			$handler = $route->handler;
+
+			/** @var callable $handler */
+			$handler = $route->params;
 
 			$parsedBody = $request->getParsedBody();
 			$parsedBodyParams = self::getOnlyStringKeysInParsedBodyParams($parsedBody);
 
-			$callParams = array_merge($request->getQueryParams(), $route->params, $parsedBodyParams);
+			$callParams = array_merge($request->getQueryParams(), $route->attributes, $parsedBodyParams);
 
 			$preProcessRequest = new PreProcessRequest(handler: $handler);
 			foreach($this->preProcessors as $preProcessFn) {
