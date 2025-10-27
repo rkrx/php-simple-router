@@ -21,4 +21,25 @@ class Route {
 		public $callable,
 		public $attributes
 	) {}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function allParams(): array {
+		$allParams = array_merge($this->postValues ?? [], $this->queryParams);
+
+		if(is_array($this->rawParsedBody)) {
+			$allParams = array_merge($allParams, $this->rawParsedBody);
+		}
+
+		/** @var array<string, mixed> $allParams */
+		$allParams['httpData'] = [
+			'httpData' => $allParams['httpData'] ?? null, // Safe what's in here
+			'queryParams' => $this->queryParams,
+			'postVars' => $this->postValues,
+			'rawPostBody' => $this->rawParsedBody,
+		];
+
+		return $allParams;
+	}
 }
