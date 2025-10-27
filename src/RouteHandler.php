@@ -92,23 +92,6 @@ class RouteHandler {
 		});
 	}
 
-	/**
-	 * @param mixed $parsedBody
-	 * @return array<string, mixed>
-	 */
-	private static function getOnlyStringKeysInParsedBodyParams(mixed $parsedBody): array {
-		if(!is_array($parsedBody)) {
-			return [];
-		}
-		$result = [];
-		foreach($parsedBody as $key => $value) {
-			if(!is_numeric($key)) {
-				$parsedBodyParams[$key] = $value;
-			}
-		}
-		return $result;
-	}
-
 	public function getRouter(): Router {
 		return $this->router;
 	}
@@ -153,15 +136,9 @@ class RouteHandler {
 				);
 			}
 
-			/** @var callable $handler */
-			$handler = $route->attributes;
+			$callParams = $route->allParams();
 
-			$parsedBody = $request->getParsedBody();
-			$parsedBodyParams = self::getOnlyStringKeysInParsedBodyParams($parsedBody);
-
-			$callParams = array_merge($request->getQueryParams(), $route->attributes, $parsedBodyParams);
-
-			$preProcessRequest = new PreProcessRequest(handler: $handler);
+			$preProcessRequest = new PreProcessRequest(handler: $route->callable);
 			foreach($this->preProcessors as $preProcessFn) {
 				$preProcessFn($preProcessRequest);
 
@@ -170,7 +147,7 @@ class RouteHandler {
 				}
 			}
 
-			$result = $this->methodInvoker->invoke($handler, $callParams);
+			$result = $this->methodInvoker->invoke($route->callable, $callParams);
 			if(!($result instanceof AbstractHttpResponse)) {
 				throw new InvalidReturnTypeException();
 			}

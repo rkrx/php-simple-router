@@ -29,7 +29,8 @@ class Route {
 		$allParams = array_merge($this->postValues ?? [], $this->queryParams);
 
 		if(is_array($this->rawParsedBody)) {
-			$allParams = array_merge($allParams, $this->rawParsedBody);
+			$keys = self::getOnlyStringKeysInParsedBodyParams($this->rawParsedBody);
+			$allParams = array_merge($allParams, $keys);
 		}
 
 		/** @var array<string, mixed> $allParams */
@@ -41,5 +42,22 @@ class Route {
 		];
 
 		return $allParams;
+	}
+
+	/**
+	 * @param mixed $parsedBody
+	 * @return array<string, mixed>
+	 */
+	private static function getOnlyStringKeysInParsedBodyParams(mixed $parsedBody): array {
+		if(!is_array($parsedBody)) {
+			return [];
+		}
+		$result = [];
+		foreach($parsedBody as $key => $value) {
+			if(!is_numeric($key)) {
+				$parsedBodyParams[$key] = $value;
+			}
+		}
+		return $result;
 	}
 }
