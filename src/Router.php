@@ -3,6 +3,7 @@ namespace Kir\Http\Routing;
 
 use Aura\Router\Exception\ImmutableProperty;
 use Aura\Router\Exception\RouteAlreadyExists;
+use Aura\Router\Map;
 use Aura\Router\RouterContainer;
 use Kir\Http\Routing\Common\Response;
 use Kir\Http\Routing\Common\Route;
@@ -14,6 +15,7 @@ use RuntimeException;
 
 class Router {
 	private readonly RouterContainer $router;
+	private readonly Map $map;
 
 	public static function createServerRequestFromEnv(?Uri $uri = null): ServerRequest {
 		/** @var array<string, mixed> $queryParams */
@@ -48,63 +50,94 @@ class Router {
 
 	public function __construct() {
 		$this->router = new RouterContainer();
+		$this->map = $this->router->getMap();
 	}
 
 	/**
 	 * @param string $name
 	 * @param string[] $methods
 	 * @param string $pattern
+	 * @param callable $callable
 	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 * @throws ImmutableProperty
 	 * @throws RouteAlreadyExists
 	 */
-	public function add(string $name, array $methods, string $pattern, $params): self {
-		$this->router->getMap()->route(name: $name, path: $pattern, handler: fn() => $params)->allows($methods);
+	public function add(string $name, array $methods, string $pattern, $callable, $params): self {
+		$route = $this->map->route(name: $name, path: $pattern, handler: fn() => [$callable, $params]);
+		$route->allows($methods);
 		return $this;
 	}
 
 	/**
 	 * @param string $name
 	 * @param string $pattern
+	 * @param callable $callable
 	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 */
-	public function get(string $name, string $pattern, $params) {
-		$this->add(name: $name, methods: ['GET'], pattern: $pattern, params: $params);
+	public function get(string $name, string $pattern, $callable, $params) {
+		$this->add(
+			name: $name,
+			methods: ['GET'],
+			pattern: $pattern,
+			callable: $callable,
+			params: $params
+		);
 		return $this;
 	}
 
 	/**
 	 * @param string $name
 	 * @param string $pattern
+	 * @param callable $callable
 	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 */
-	public function post(string $name, string $pattern, $params) {
-		$this->add(name: $name, methods: ['POST'], pattern: $pattern, params: $params);
+	public function post(string $name, string $pattern, $callable, $params) {
+		$this->add(
+			name: $name,
+			methods: ['POST'],
+			pattern: $pattern,
+			callable: $callable,
+			params: $params
+		);
 		return $this;
 	}
 
 	/**
 	 * @param string $name
 	 * @param string $pattern
+	 * @param callable $callable
 	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 */
-	public function put(string $name, string $pattern, $params) {
-		$this->add(name: $name, methods: ['PUT'], pattern: $pattern, params: $params);
+	public function put(string $name, string $pattern, $callable, $params) {
+		$this->add(
+			name: $name,
+			methods: ['PUT'],
+			pattern: $pattern,
+			callable: $callable,
+			params: $params
+		);
 		return $this;
 	}
 
 	/**
 	 * @param string $name
 	 * @param string $pattern
+	 * @param callable $callable
 	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
 	 */
-	public function delete(string $name, string $pattern, $params) {
-		$this->add(name: $name, methods: ['DELETE'], pattern: $pattern, params: $params);
+	public function delete(string $name, string $pattern, $callable, $params) {
+		$this->add(
+			name: $name,
+			methods: ['DELETE'],
+			pattern: $pattern,
+			callable: $callable,
+			params: $params
+		);
 		return $this;
 	}
 
@@ -118,20 +151,31 @@ class Router {
 			return null;
 		}
 
-		/** @var array<string, mixed> $attributes */
-		$attributes = $route->attributes;
-
 		/** @var callable $handler */
 		$handler = $route->handler;
 
-		/** @var callable|array<string, mixed>|object $params */
-		$params = $handler();
+		/** @var array{callable, array<string, mixed>|object} $attributes */
+		$attributes = $handler();
+
+		[$callable, $params] = $attributes;
+
+		/** @var mixed $parsedBody */
+		$parsedBody = $request->getParsedBody();
+
+		/** @var array<string, mixed> $postValues */
+		$postValues = is_array($parsedBody) ? $parsedBody : [];
+
+		/** @var array<string, mixed> $queryParams */
+		$queryParams = $request->getQueryParams();
 
 		return new Route(
 			name: $route->name,
 			method: $request->getMethod(),
-			attributes: $attributes,
-			params: $params
+			queryParams: $queryParams,
+			postValues: $postValues,
+			rawParsedBody: $parsedBody,
+			callable: $callable,
+			attributes: $params
 		);
 	}
 }

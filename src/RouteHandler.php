@@ -154,7 +154,7 @@ class RouteHandler {
 			}
 
 			/** @var callable $handler */
-			$handler = $route->params;
+			$handler = $route->attributes;
 
 			$parsedBody = $request->getParsedBody();
 			$parsedBodyParams = self::getOnlyStringKeysInParsedBodyParams($parsedBody);
