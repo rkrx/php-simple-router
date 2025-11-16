@@ -15,13 +15,24 @@ class RouterTest extends TestCase {
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
 		$router = new Router();
-		$router->get(name: 'some.name', pattern: '/test/{id}', params: fn (int $id) => new HtmlResponse((string) $id));
+		$router->get(name: 'some.name', pattern: '/test/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
 		$route = $router->lookup($serverRequest);
 
 		self::assertInstanceOf(Route::class, $route);
 		self::assertEquals('some.name', $route->name);
 		self::assertEquals('GET', $route->method);
-		self::assertEquals(['id' => 123], $route->attributes);
+		self::assertEquals(['secure' => true], $route->attributes);
+	}
+
+	public function testFailingLookup(): void {
+		$uri = new Uri('http://test.localhost/test/123');
+		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
+
+		$router = new Router();
+		$router->get(name: 'some.name', pattern: '/non-existing/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
+		$route = $router->lookup($serverRequest);
+
+		self::assertNull($route);
 	}
 
 	public function testDispatch(): void {
@@ -29,7 +40,7 @@ class RouterTest extends TestCase {
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
 		$router = new RouteHandler(new TestMethodInvoker());
-		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', params: fn (int $id) => new HtmlResponse((string) $id));
+		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
 
 		$result = $router->dispatch(request: $serverRequest, response: new Response());
 

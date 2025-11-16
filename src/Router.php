@@ -1,10 +1,6 @@
 <?php
 namespace Kir\Http\Routing;
 
-use Aura\Router\Exception\ImmutableProperty;
-use Aura\Router\Exception\RouteAlreadyExists;
-use Aura\Router\Map;
-use Aura\Router\RouterContainer;
 use Kir\Http\Routing\Common\Response;
 use Kir\Http\Routing\Common\Route;
 use Kir\Http\Routing\Common\ServerRequest;
@@ -12,10 +8,14 @@ use Kir\Http\Routing\Common\Stream;
 use Kir\Http\Routing\Common\Uri;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Route as SymfonyRoute;
+use Throwable;
 
 class Router {
-	private readonly RouterContainer $router;
-	private readonly Map $map;
+	private RouteCollection $routes;
 
 	public static function createServerRequestFromEnv(?Uri $uri = null): ServerRequest {
 		/** @var array<string, mixed> $queryParams */
@@ -49,8 +49,7 @@ class Router {
 	}
 
 	public function __construct() {
-		$this->router = new RouterContainer();
-		$this->map = $this->router->getMap();
+		$this->routes = new RouteCollection();
 	}
 
 	/**
@@ -60,12 +59,20 @@ class Router {
 	 * @param callable $callable
 	 * @param callable|array<string, mixed>|object $params
 	 * @return $this
-	 * @throws ImmutableProperty
-	 * @throws RouteAlreadyExists
 	 */
 	public function add(string $name, array $methods, string $pattern, $callable, $params): self {
-		$route = $this->map->route(name: $name, path: $pattern, handler: fn() => [$callable, $params]);
-		$route->allows($methods);
+		$route = new SymfonyRoute(
+			path: $pattern,
+			defaults: ['callable' => $callable],
+			requirements: [],
+			options: ['params' => $params],
+			host: '',
+			methods: $methods,
+			condition: '',
+		);
+
+		$this->routes->add($name, $route);
+
 		return $this;
 	}
 
@@ -146,18 +153,21 @@ class Router {
 	 * @return Route|null
 	 */
 	public function lookup(ServerRequestInterface $request): ?Route {
-		$route = $this->router->getMatcher()->match($request);
-		if($route === false) {
+		$context = self::createRequestContextFromPsr($request);
+		$matcher = new UrlMatcher($this->routes, $context);
+
+		/** @var Throwable|array{_route: string, callable: callable} $route */
+		$route = self::tryThis(static fn() => $matcher->match($request->getUri()->getPath()));
+		if($route instanceof Throwable) {
 			return null;
 		}
 
-		/** @var callable $handler */
-		$handler = $route->handler;
+		$originalRoute = $this->routes->get($route['_route']);
+		if($originalRoute === null) {
+			return null;
+		}
 
-		/** @var array{callable, array<string, mixed>|object} $attributes */
-		$attributes = $handler();
-
-		[$callable, $params] = $attributes;
+		$params = array_diff_key($route, ['_route' => '', 'callable' => '']);
 
 		/** @var mixed $parsedBody */
 		$parsedBody = $request->getParsedBody();
@@ -168,14 +178,52 @@ class Router {
 		/** @var array<string, mixed> $queryParams */
 		$queryParams = $request->getQueryParams();
 
+		/** @var array<string, mixed> $attributes */
+		$attributes = $originalRoute->getOptions()['params'] ?? [];
+
 		return new Route(
-			name: $route->name,
+			name: $route['_route'],
 			method: $request->getMethod(),
-			queryParams: $queryParams,
+			queryParams: array_merge($queryParams, $params),
 			postValues: $postValues,
 			rawParsedBody: $parsedBody,
-			callable: $callable,
-			attributes: $params
+			callable: $route['callable'],
+			attributes: $attributes
 		);
+	}
+
+	private static function createRequestContextFromPsr(ServerRequestInterface $psrRequest): RequestContext {
+		$uri = $psrRequest->getUri();
+
+		$context = new RequestContext();
+
+		$context->setMethod($psrRequest->getMethod());
+		$context->setHost($uri->getHost());
+		$context->setScheme($uri->getScheme());
+		$context->setHttpPort($uri->getPort() ?: 80);
+		$context->setHttpsPort($uri->getPort() ?: 443);
+
+		// Path + Query
+		$context->setPathInfo($uri->getPath());
+		$context->setQueryString($uri->getQuery());
+
+		// Base URL (optional, wenn du keinen Unterordner nutzt)
+		// PSR requests haben keinen base path – falls nötig, musst du selbst entscheiden
+		$context->setBaseUrl('');
+
+		return $context;
+	}
+
+	/**
+	 * @template T
+	 * @param callable(): T $fn
+	 * @return T|Throwable
+	 */
+	private static function tryThis($fn) {
+		try {
+			return $fn();
+		} catch(Throwable $e) {
+			return $e;
+		}
 	}
 }
