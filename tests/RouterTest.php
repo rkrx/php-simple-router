@@ -2,12 +2,12 @@
 namespace Kir\Http\Routing;
 
 use Kir\Http\Routing\Common\Route;
+use Kir\Http\Routing\Common\Response;
 use Kir\Http\Routing\Common\ServerRequest;
 use Kir\Http\Routing\Common\TestMethodInvoker;
 use Kir\Http\Routing\Common\Uri;
 use Kir\Http\Routing\ResponseTypes\HtmlResponse;
 use PHPUnit\Framework\TestCase;
-use Zend\Diactoros\Response;
 
 class RouterTest extends TestCase {
 	public function testLookup(): void {
@@ -42,7 +42,7 @@ class RouterTest extends TestCase {
 		$router = new RouteHandler(new TestMethodInvoker());
 		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
 
-		$result = $router->dispatch(request: $serverRequest, response: new Response());
+		$result = $router->dispatch(request: $serverRequest, response: Router::createResponse());
 
 		self::assertInstanceOf(Response::class, $result);
 		self::assertEquals(['text/html; charset=utf-8'], $result->getHeader('Content-Type'));
