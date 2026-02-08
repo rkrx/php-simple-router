@@ -29,10 +29,10 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Kir\Http\Routing\Common\ServerRequest;
 use Kir\Http\Routing\Common\Uri;
-use Kir\Http\Routing\Router;
+use Kir\Http\Routing\RouterBuilder;
 
-$router = new Router();
-$router->get(
+$routerBuilder = new RouterBuilder();
+$routerBuilder->get(
     name: 'hello',
     pattern: '/hello/{name}',
     callable: fn (string $name) => "Hello {$name}",
@@ -46,6 +46,7 @@ $request = new ServerRequest(
     parsedBody: []
 );
 
+$router = $routerBuilder->build();
 $route = $router->lookup($request);
 if ($route === null) {
     http_response_code(404);
@@ -63,7 +64,7 @@ echo $result;
 ### Register routes
 
 ```php
-$router->add(
+$routerBuilder->add(
     name: 'article.show',
     methods: ['GET', 'HEAD'],
     pattern: '/articles/{id}',
@@ -71,7 +72,7 @@ $router->add(
     params: ['cache' => true]
 );
 
-$router->post(
+$routerBuilder->post(
     name: 'session.create',
     pattern: '/login',
     callable: fn () => 'Logged in',
@@ -82,6 +83,7 @@ $router->post(
 ### Lookup and params
 
 ```php
+$router = $routerBuilder->build();
 $route = $router->lookup($request);
 
 if ($route !== null) {
@@ -124,14 +126,23 @@ $response = $handler->dispatch($request, Router::createResponse());
 
 ## Public API overview
 
-### Router
+### RouterBuilder
 
-- **Purpose:** register routes and match a PSR-7 request to a `Route`.
+- **Purpose:** register routes and build a `Router`.
 - **Stability:** not explicitly stated (see project-level stability).
 - **Constructor:** `__construct()` creates an empty route collection.
 - **Methods:**
   - `add(string $name, array $methods, string $pattern, callable $callable, callable|array|object $params): self` registers a route and returns the router for chaining.
   - `get/post/put/delete(...)` are convenience wrappers around `add()`.
+  - `addDefinitions(array $definitions): self` registers routes from a config array.
+  - `build(): Router` creates a router instance for lookups.
+
+### Router
+
+- **Purpose:** match a PSR-7 request to a `Route`.
+- **Stability:** not explicitly stated (see project-level stability).
+- **Constructor:** built via `RouterBuilder::build()`.
+- **Methods:**
   - `lookup(ServerRequestInterface $request): ?Route` returns a matched route or `null` (no exception on missing routes).
   - `createServerRequestFromEnv(?Uri $uri = null): ServerRequest` builds a request from globals; throws `RuntimeException` on invalid JSON input.
   - `createResponse(): Response` returns a basic PSR-7 response with an empty `Stream` body.

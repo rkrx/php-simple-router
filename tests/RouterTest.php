@@ -14,9 +14,9 @@ class RouterTest extends TestCase {
 		$uri = new Uri('http://test.localhost/test/123');
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
-		$router = new Router();
-		$router->get(name: 'some.name', pattern: '/test/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
-		$route = $router->lookup($serverRequest);
+		$routerBuilder = new RouterBuilder();
+		$routerBuilder->get(name: 'some.name', pattern: '/test/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
+		$route = $routerBuilder->build()->lookup($serverRequest);
 
 		self::assertInstanceOf(Route::class, $route);
 		self::assertEquals('some.name', $route->name);
@@ -28,9 +28,9 @@ class RouterTest extends TestCase {
 		$uri = new Uri('http://test.localhost/test/123');
 		$serverRequest = new ServerRequest(method: 'GET', uri: $uri, queryParams: [], parsedBody: []);
 
-		$router = new Router();
-		$router->get(name: 'some.name', pattern: '/non-existing/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
-		$route = $router->lookup($serverRequest);
+		$routerBuilder = new RouterBuilder();
+		$routerBuilder->get(name: 'some.name', pattern: '/non-existing/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
+		$route = $routerBuilder->build()->lookup($serverRequest);
 
 		self::assertNull($route);
 	}
