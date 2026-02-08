@@ -38,12 +38,8 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Kir\\Http\\Routing\\": ["src/", "tests/"],
-			"SrcProject\\": "src-project/"
-		},
-		"files": [
-			"src-project/test.php"
-		]
+			"Kir\\Http\\Routing\\": ["src/", "tests/"]
+		}
 	},
 	"scripts": {
 		"phpstan": "phpstan analyse -c phpstan.neon --memory-limit=2G --no-progress",
