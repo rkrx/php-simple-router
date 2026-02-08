@@ -26,7 +26,6 @@ use Throwable;
  * @phpstan-type HandlerType Closure(object, ResponseInterface):ResponseInterface
  */
 class RouteHandler {
-	private readonly RouterBuilder $routerBuilder;
 	/** @var array<callable(PreProcessRequest):void> */
 	private array $preProcessors = [];
 	/** @var array<string, HandlerType> */
@@ -37,9 +36,10 @@ class RouteHandler {
 	/**
 	 * @param MethodInvoker $methodInvoker
 	 */
-	public function __construct(private readonly MethodInvoker $methodInvoker) {
-		$this->routerBuilder = new RouterBuilder();
-
+	public function __construct(
+		private readonly Router $router,
+		private readonly MethodInvoker $methodInvoker,
+	) {
 		$this->setPostProcessor(BinaryContentResponse::class, function (BinaryContentResponse $result, ResponseInterface $response): ResponseInterface {
 			$response->getBody()->write((string) $result);
 			return $response
@@ -92,10 +92,6 @@ class RouteHandler {
 		});
 	}
 
-	public function getRouter(): RouterBuilder {
-		return $this->routerBuilder;
-	}
-
 	/**
 	 * @param callable(PreProcessRequest):void $fn
 	 * @return void
@@ -128,7 +124,7 @@ class RouteHandler {
 	 */
 	public function dispatch(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
 		try {
-			$route = $this->routerBuilder->build()->lookup($request);
+			$route = $this->router->lookup($request);
 			if($route === null) {
 				throw new RouteNotFoundException(
 					url: (string) $request->getUri(),
