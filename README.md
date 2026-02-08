@@ -184,6 +184,54 @@ Built-in `ResponseTypes` implement `AbstractHttpResponse` and are handled by the
 - Route attributes are passed via the `$params` argument and exposed as `Route::$attributes`.
 - Customize dispatch behavior via `RouteHandler` pre-processors, post-processors, and the error handler.
 
+## OpenAPI integration
+
+This project can generate a route configuration from OpenAPI PHP attributes (via `zircote/swagger-php`).
+The generator scans your PHP code for OpenAPI HTTP method attributes (e.g. `#[OA\Get]`, `#[OA\Post]`)
+and writes a route config file that can be loaded into `RouterBuilder`.
+
+### Generate route config from OpenAPI attributes
+
+```sh
+php bin/generate-openapi-routes.php \
+  --index-path var/openapi-index.xml \
+  --route-config-path var/openapi-routes.php \
+  src tests
+```
+
+- `src`/`tests` are the scan paths (you can pass multiple).
+- `--index-path` and `--route-config-path` are required unless you set
+  `OPENAPI_INDEX_PATH` and/or `OPENAPI_ROUTE_CONFIG_PATH`.
+- The output file is a PHP array with `routes` entries you can load as definitions.
+
+### Load the generated routes
+
+```php
+/** @var array{routes?: array<int, array<string, mixed>>} $definitions */
+$definitions = require __DIR__ . '/var/openapi-routes.php';
+
+$routerBuilder = new RouterBuilder();
+$routerBuilder->addDefinitions($definitions);
+$router = $routerBuilder->build();
+```
+
+### OpenAPI metadata in routes
+
+OpenAPI-specific metadata (e.g. `security`) is stored under
+`$route->attributes['openapi']`. This lets you enforce auth or other policies
+at dispatch time without mixing them into your normal route params.
+
+### Required OpenAPI info
+
+`swagger-php` requires an `Info` definition in the scanned code, e.g.:
+
+```php
+use OpenApi\Attributes as OA;
+
+#[OA\Info(title: 'Example API', version: '1.0.0')]
+final class OpenApiSpec {}
+```
+
 ## Error handling
 
 - `Router::lookup()` returns `null` when no route matches or the matcher fails.
