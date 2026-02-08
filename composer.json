@@ -47,7 +47,6 @@
 	},
 	"scripts": {
 		"phpstan": "phpstan analyse -c phpstan.neon --memory-limit=2G --no-progress",
-		"test": "phpunit --testdox --colors=always tests/",
-		"post-autoload-dump": "php bin/generate-openapi-routes.php"
+		"test": "phpunit --testdox --colors=always tests/"
 	}
 }

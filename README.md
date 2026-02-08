@@ -136,6 +136,7 @@ $response = $handler->dispatch($request, Router::createResponse());
   - `get/post/put/delete(...)` are convenience wrappers around `add()`.
   - `addDefinitions(array $definitions): self` registers routes from a config array.
   - `build(): Router` creates a router instance for lookups.
+  - `createServerRequestFromEnv(?Uri $uri = null): ServerRequest` builds a request from globals; throws `RuntimeException` on invalid JSON input.
 
 ### Router
 
@@ -144,7 +145,6 @@ $response = $handler->dispatch($request, Router::createResponse());
 - **Constructor:** built via `RouterBuilder::build()`.
 - **Methods:**
   - `lookup(ServerRequestInterface $request): ?Route` returns a matched route or `null` (no exception on missing routes).
-  - `createServerRequestFromEnv(?Uri $uri = null): ServerRequest` builds a request from globals; throws `RuntimeException` on invalid JSON input.
   - `createResponse(): Response` returns a basic PSR-7 response with an empty `Stream` body.
 
 ### RouteHandler
@@ -235,7 +235,7 @@ final class OpenApiSpec {}
 ## Error handling
 
 - `Router::lookup()` returns `null` when no route matches or the matcher fails.
-- `Router::createServerRequestFromEnv()` throws `RuntimeException` if JSON input cannot be read or decoded.
+- `RouterBuilder::createServerRequestFromEnv()` throws `RuntimeException` if JSON input cannot be read or decoded.
 - `RouteHandler::dispatch()` sets HTTP status codes and rethrows exceptions for:
   - Route not found (`RouteNotFoundException`, 400)
   - Method not registered (`MethodNotRegisteredException`, 400)

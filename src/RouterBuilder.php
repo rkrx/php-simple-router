@@ -1,6 +1,9 @@
 <?php
 namespace Kir\Http\Routing;
 
+use Kir\Http\Routing\Common\ServerRequest;
+use Kir\Http\Routing\Common\Uri;
+use RuntimeException;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Route as SymfonyRoute;
 
@@ -13,6 +16,33 @@ class RouterBuilder {
 
 	public function build(): Router {
 		return new Router($this->routes);
+	}
+
+	public static function createServerRequestFromEnv(?Uri $uri = null): ServerRequest {
+		/** @var array<string, mixed> $queryParams */
+		$queryParams = $_GET;
+
+		$parsedBody = $_POST;
+
+		/** @var array{REQUEST_METHOD: string, CONTENT_TYPE?: string} $serverVars */
+		$serverVars = $_SERVER;
+
+		if(str_contains($serverVars['CONTENT_TYPE'] ?? '', 'application/json')) {
+			$json = file_get_contents('php://input');
+			if($json === false) {
+				throw new RuntimeException('Invalid input');
+			}
+			$parsedBody = json_decode(json: $json, associative: true, depth: 512, flags: JSON_THROW_ON_ERROR);
+		}
+
+		$uri ??= new Uri(is_string($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
+
+		return new ServerRequest(
+			method: $serverVars['REQUEST_METHOD'],
+			uri: $uri,
+			queryParams: $queryParams,
+			parsedBody: $parsedBody
+		);
 	}
 
 	/**
