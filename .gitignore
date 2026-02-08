@@ -2,6 +2,7 @@
 !/bin
 !/src
 !/tests
+!/var
 !/.editorconfig
 !/.gitattributes
 !/.gitignore
