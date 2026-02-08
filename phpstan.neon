@@ -2,5 +2,6 @@ parameters:
     level: max
 
     paths:
+        - bin/generate-openapi-routes.php
         - src
         - tests

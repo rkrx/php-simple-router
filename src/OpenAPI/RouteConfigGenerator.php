@@ -145,12 +145,20 @@ class RouteConfigGenerator {
 				? $operationId
 				: $className . '::' . $methodName;
 
+			$openapiParams = [];
+			$security = $attribute->security ?? null;
+			if(is_array($security)) {
+				$openapiParams['security'] = $security;
+			}
+
 			$routes[] = [
 				'name' => $routeName,
 				'method' => $httpMethod,
 				'path' => $path,
 				'target' => [$className, $methodName],
-				'params' => [],
+				'params' => [
+					'openapi' => $openapiParams,
+				],
 			];
 		}
 
