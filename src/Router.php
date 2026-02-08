@@ -57,7 +57,7 @@ class Router {
 	 * @param string[] $methods
 	 * @param string $pattern
 	 * @param callable $callable
-	 * @param callable|array<string, mixed>|object $params
+	 * @param array<string, mixed>|object $params
 	 * @return $this
 	 */
 	public function add(string $name, array $methods, string $pattern, $callable, $params): self {
@@ -77,10 +77,56 @@ class Router {
 	}
 
 	/**
+	 * @param array{routes?: array<int, array<string, mixed>>} $definitions
+	 * @return $this
+	 */
+	public function addDefinitions(array $definitions): self {
+		/** @var array<int, array<string, mixed>> $routes */
+		$routes = $definitions['routes'] ?? [];
+
+		foreach($routes as $route) {
+			if(!is_array($route)) { // @phpstan-ignore-line
+				continue;
+			}
+
+			$name = $route['name'] ?? null;
+			$pattern = $route['path'] ?? null;
+
+			/** @var null|(callable(): mixed) $callable */
+			$callable = $route['target'] ?? ($route['callable'] ?? null);
+
+			/** @var array<string, mixed>|object $params */
+			$params = $route['params'] ?? [];
+
+			if(!is_string($name) || !is_string($pattern) || $callable === null) {
+				continue;
+			}
+
+			$methodsValue = $route['method'] ?? ($route['methods'] ?? ['GET']);
+			$methods = is_array($methodsValue) ? array_values($methodsValue) : [$methodsValue];
+			$methods = array_values(array_filter($methods, static fn($method) => is_string($method) && $method !== ''));
+
+			if($methods === []) {
+				$methods = ['GET'];
+			}
+
+			$this->add(
+				name: $name,
+				methods: $methods,
+				pattern: $pattern,
+				callable: $callable,
+				params: $params
+			);
+		}
+
+		return $this;
+	}
+
+	/**
 	 * @param string $name
 	 * @param string $pattern
 	 * @param callable $callable
-	 * @param callable|array<string, mixed>|object $params
+	 * @param array<string, mixed>|object $params
 	 * @return $this
 	 */
 	public function get(string $name, string $pattern, $callable, $params) {
@@ -98,7 +144,7 @@ class Router {
 	 * @param string $name
 	 * @param string $pattern
 	 * @param callable $callable
-	 * @param callable|array<string, mixed>|object $params
+	 * @param array<string, mixed>|object $params
 	 * @return $this
 	 */
 	public function post(string $name, string $pattern, $callable, $params) {
@@ -116,7 +162,7 @@ class Router {
 	 * @param string $name
 	 * @param string $pattern
 	 * @param callable $callable
-	 * @param callable|array<string, mixed>|object $params
+	 * @param array<string, mixed>|object $params
 	 * @return $this
 	 */
 	public function put(string $name, string $pattern, $callable, $params) {
@@ -134,7 +180,7 @@ class Router {
 	 * @param string $name
 	 * @param string $pattern
 	 * @param callable $callable
-	 * @param callable|array<string, mixed>|object $params
+	 * @param array<string, mixed>|object $params
 	 * @return $this
 	 */
 	public function delete(string $name, string $pattern, $callable, $params) {
