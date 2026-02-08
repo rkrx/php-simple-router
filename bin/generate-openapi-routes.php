@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 
 declare(strict_types=1);
@@ -5,9 +6,23 @@ declare(strict_types=1);
 use Kir\Http\Routing\OpenAPI\RouteConfigGenerator;
 use Psr\Log\NullLogger;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+$root = getcwd();
+if($root === false) {
+	$root = dirname(__DIR__);
+}
 
-$root = dirname(__DIR__);
+$autoloadPath = $root . '/vendor/autoload.php';
+if(!is_file($autoloadPath)) {
+	$autoloadPath = dirname(__DIR__) . '/vendor/autoload.php';
+}
+if(!class_exists(RouteConfigGenerator::class)) {
+	if(!is_file($autoloadPath)) {
+		fwrite(STDERR, "Composer autoload.php not found.\n");
+		exit(1);
+	}
+
+	require $autoloadPath;
+}
 
 $usage = <<<TXT
 Usage:
@@ -39,7 +54,7 @@ $indexPathArg = null;
 $routeConfigPathArg = null;
 $scanPaths = [];
 
-for($i = 0; $i < count($args); $i++) {
+for($i = 0, $c = count($args); $i < $c; $i++) {
 	$arg = $args[$i];
 
 	if($arg === '--index-path') {
@@ -76,8 +91,19 @@ $scanPaths = array_values(array_filter(
 	array_map(static fn(string $path): string => trim($path), $scanPaths),
 	static fn(string $path): bool => $path !== ''
 ));
+$isAbsolutePath = static function(string $path): bool {
+	if($path === '') {
+		return false;
+	}
+
+	if(str_starts_with($path, DIRECTORY_SEPARATOR)) {
+		return true;
+	}
+
+	return preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
+};
 $scanPaths = array_map(
-	static fn($path) => str_starts_with($path, DIRECTORY_SEPARATOR) ? $path : $root . '/' . $path,
+	fn(string $path): string => $isAbsolutePath($path) ? $path : $root . DIRECTORY_SEPARATOR . $path,
 	$scanPaths
 );
 
