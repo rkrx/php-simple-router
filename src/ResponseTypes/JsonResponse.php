@@ -5,7 +5,12 @@ namespace Kir\Http\Routing\ResponseTypes;
 use Override;
 
 class JsonResponse extends AbstractHttpResponse {
-	public function __construct(private readonly mixed $data, int $statusCode = 200) {
+	/**
+	 * @param mixed $data
+	 * @param int $statusCode
+	 * @param array<string, mixed>|array{prettyPrint?: bool} $options
+	 */
+	public function __construct(private readonly mixed $data, int $statusCode = 200, public array $options = []) {
 		parent::__construct($statusCode);
 	}
 
