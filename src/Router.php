@@ -1,9 +1,7 @@
 <?php
 namespace Kir\Http\Routing;
 
-use Kir\Http\Routing\Common\Response;
 use Kir\Http\Routing\Common\Route;
-use Kir\Http\Routing\Common\Stream;
 use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
@@ -12,10 +10,6 @@ use Throwable;
 
 class Router {
 	private RouteCollection $routes;
-
-	public static function createResponse(): Response {
-		return new Response(body: new Stream);
-	}
 
 	public function __construct(RouteCollection $routes) {
 		$this->routes = $routes;

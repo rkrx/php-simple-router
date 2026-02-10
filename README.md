@@ -121,7 +121,7 @@ $request = new ServerRequest(
     parsedBody: []
 );
 
-$response = $handler->dispatch($request, Router::createResponse());
+$response = $handler->dispatch($request, RouterBuilder::createResponse());
 ```
 
 ## Public API overview
@@ -137,6 +137,7 @@ $response = $handler->dispatch($request, Router::createResponse());
   - `addDefinitions(array $definitions): self` registers routes from a config array.
   - `build(): Router` creates a router instance for lookups.
   - `createServerRequestFromEnv(?Uri $uri = null): ServerRequest` builds a request from globals; throws `RuntimeException` on invalid JSON input.
+  - `createResponse(): Response` returns a basic PSR-7 response with an empty `Stream` body.
 
 ### Router
 
@@ -145,7 +146,6 @@ $response = $handler->dispatch($request, Router::createResponse());
 - **Constructor:** built via `RouterBuilder::build()`.
 - **Methods:**
   - `lookup(ServerRequestInterface $request): ?Route` returns a matched route or `null` (no exception on missing routes).
-  - `createResponse(): Response` returns a basic PSR-7 response with an empty `Stream` body.
 
 ### RouteHandler
 

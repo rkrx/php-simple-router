@@ -42,7 +42,7 @@ class RouterTest extends TestCase {
 		$router = new RouteHandler(new TestMethodInvoker());
 		$router->getRouter()->get(name: 'some.name', pattern: '/test/{id}', callable: fn (int $id) => new HtmlResponse((string) $id), params: ['secure' => true]);
 
-		$result = $router->dispatch(request: $serverRequest, response: Router::createResponse());
+		$result = $router->dispatch(request: $serverRequest, response: RouterBuilder::createResponse());
 
 		self::assertInstanceOf(Response::class, $result);
 		self::assertEquals(['text/html; charset=utf-8'], $result->getHeader('Content-Type'));

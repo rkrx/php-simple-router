@@ -2,6 +2,8 @@
 namespace Kir\Http\Routing;
 
 use Kir\Http\Routing\Common\ServerRequest;
+use Kir\Http\Routing\Common\Response;
+use Kir\Http\Routing\Common\Stream;
 use Kir\Http\Routing\Common\Uri;
 use RuntimeException;
 use Symfony\Component\Routing\RouteCollection;
@@ -43,6 +45,10 @@ class RouterBuilder {
 			queryParams: $queryParams,
 			parsedBody: $parsedBody
 		);
+	}
+
+	public static function createResponse(): Response {
+		return new Response(body: new Stream);
 	}
 
 	/**
